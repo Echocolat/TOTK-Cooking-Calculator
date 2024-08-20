@@ -343,7 +343,8 @@ class TotKCookSim():
         effect_time = self._tmp['EffectTime']
         hitpoint_recover = self._tmp['HitPointRecover']
         for material in materials_list:
-            if material.get('CookTag') == "CookSpice":
+            #if material.get('CookTag') == "CookSpice":
+            if material.get('CookTag') != "CookEnemy":
                 # health spice
                 if self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag or self._critical_only_health_flag or self._monster_extract_only_health_random_flag:
                     self._tmp['Critical']['HitPointRecover'] = [self._tmp['Critical']['HitPointRecover'][0] + material.get('SpiceBoostHitPointRecover', 0), self._tmp['Critical']['HitPointRecover'][1] + material.get('SpiceBoostHitPointRecover', 0)]
@@ -636,5 +637,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Endura Carrot", "Monster Extract"])
+    output = meal.cook(["Star Fragment", "Golden Apple", "Silver Lynel Saber Horn", "Hot-Footed Frog", "Monster Extract"])
     print(output)
