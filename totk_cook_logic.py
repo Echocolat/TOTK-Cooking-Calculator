@@ -276,7 +276,6 @@ class TotKCookSim():
 
         # just to make sure
         if effect_type in ['LifeMaxUp', 'StaminaRecover', 'ExStaminaMaxUp', 'LifeRepair']:
-            effect_level = 0.0
             effect_time = 0
 
         self._tmp['Effect'] = effect_type
@@ -308,7 +307,7 @@ class TotKCookSim():
 
     def _monster_extract(self):
 
-        """Handles Monster Extract shenanigans (mainly starts holding data for all possibilities)"""
+        """Handles Monster Extract shenanigans (mainly starts storing data for all possibilities)"""
 
         materials_list = self._tmp['Materials']
         effect = self._tmp['Effect']
@@ -338,31 +337,47 @@ class TotKCookSim():
             self._tmp['Monster Extract'] = {}
             if effect != None and effect_time > 0:
                 # this always happens as long as the meal has an effect with a duration
+                # sets a time that's either 1:00, 10:00 or 30:00
                 self._monster_extract_time_flag = True
                 self._tmp['Monster Extract']['EffectTime'] = [60, 600, 1800]
+
+            # the following part is a simplified version of what the game does to know what to do with effect level and health recovery when
+            # a monster extract is present in the materials list
+
+            # the self._tmp['Monster Extract'] dictionary is a way to keep track of all possible ways the meal can be affected by, as to not
+            # to touch the true stats of the meal
+
             if (hitpoint_recover == 0 and effect != None) or effect == 'LifeMaxUp':
-                # if the meal is not regenerative but has an effect, or is a hearty meal
+                # if the meal is not regenerative but has an effect, or is a hearty meal, effect level is either set to min or gets SSAV added
+                # at random (50/50) (SSAV = SuperSuccessAddVolume, a property of each effect)
                 self._monster_extract_only_level_flag = True
                 self._tmp['Monster Extract']['EffectLevel'] = [self.effect[effect].get('MinLv'), effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
             elif (hitpoint_recover == 0 and effect != None):
-                # if the meal is not regenerative and has no effect (?)
+                # if the meal is not regenerative and has no effect, add SSAV of LifeRecover (e.g. 12) to health recovery
+                # unsure if this can happen at any point
                 self._monster_extract_only_health_up_flag = True
                 self._tmp['Monster Extract']['HitPointRecover'] = hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')
             elif effect != None:
-                # if the meal is regenerative and has an effect (that is not hearty)
+                # if the meal is regenerative and has an effect (that is not hearty), either effect level is touched (either set to min, either gets
+                # SSAV added), either health recovery is set to min (1) or gets SSAV of LifeRecover (3 hearts) to it at random (25/25/25/25)
                 self._monster_extract_health_level_random_flag = True
                 self._tmp['Monster Extract']['HitPointRecover'] = [1, hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
                 self._tmp['Monster Extract']['EffectLevel'] = [self.effect[effect].get('MinLv'), effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
             else:
-                # if the meal is regenerative with no effect
+                # if the meal is regenerative with no effect, health recovery is either set to min, either gets +3 hearts
                 self._monster_extract_only_health_random_flag = True
                 self._tmp['Monster Extract']['HitPointRecover'] = [1, hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
 
     def _critical(self):
+
+        """Handles Critical meals shenanigans (mainly starts storing data for all possibilities)"""
+
         effect = self._tmp['Effect']
         effect_level = self._tmp['EffectLevel']
         effect_time = self._tmp['EffectTime']
         hitpoint_recover = self._tmp['HitPointRecover']
+
+        # initializes all flags
         self._critical_only_time_flag = False
         self._critical_only_health_flag = False
         self._critical_health_level_flag = False
@@ -370,23 +385,37 @@ class TotKCookSim():
         self._critical_health_level_time_flag = False
         self._critical_only_level_flag = False
         self._critical_flag = False
+
+        # criticals have no effect on failed meals and rock hard food
         if self._tmp['Recipe']['ResultActorName'] in [self.system_data['FailActorName'], "Item_Cook_O_02"]:
             return
 
+        # monster extract inhibits criticals
         if not self._monster_extract_flag:
             self._critical_flag = True
+            # initialize critical section
             self._tmp['Critical'] = {}
+
+            # the following part is a simplified version of what the game does to know what to do with effect level, time and health recovery when
+            # a critical hit happens on a meal
+
+            # if effect level <= 1.0, set the effect level to 1.0. That's the main difference between Monster Extract and Crit in regardes to
+            # effect level. with crit, if level is chosen to be leveled up, it will always be >= 2.0 and will always be better than without crit,
+            # while for monster extract, it has no guarantee to be >= 2.0 (e.g. can stay at level 1)
             if effect_level <= 1.0:
                 effect_level, self._tmp['EffectLevel'] = 1.0, 1.0
+
             if effect == None:
-                # health crit
+                # if the meal has no effect, since it has no effect level or time, it can only give a health crit. Health crit adds the SSAV of
+                # LifeRecover (as seen above, 12 = 3 hearts) to health recovery. All health criticals behave the same
                 self._critical_only_health_flag = True
                 self._tmp['Critical']['HitPointRecover'] = [hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
             elif effect == "LifeMaxUp":
-                # level crit
+                # if the effect of the meal is Extra Hearts, its effect level gets the effect's SSAV added to it (in this case, 4 e.g. 1 yellow heart)
                 self._critical_only_level_flag = True
                 self._tmp['Critical']['EffectLevel'] = [effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
             elif effect in ['StaminaRecover', 'ExStaminaMaxUp']:
+                # if the effect of the meal is stamina-related
                 if effect_level >= self.effect[effect].get('MaxLv'):
                     # health crit
                     self._critical_only_health_flag = True
@@ -665,11 +694,40 @@ class TotKCookSim():
 
         # level
 
-        if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
-            self._tmp['RNG'] += f'Monster Extract sets effect level to {self._tmp['Monster Extract']['EffectLevel'][0]}, either effect level gets {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]} additional level(s)'
-        elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
-            self._tmp['RNG'] += f"If there's a critical hit, effect level gets {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} additional level(s)"
-        level_str = str(self._tmp['EffectLevel'])
+        if effect == "LifeMaxUp":
+            if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
+                self._tmp['RNG'] += f'Monster Extract sets meal effect to {int(self._tmp['Monster Extract']['EffectLevel'][0] / 4)} Extra Heart, either adds {int((self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]) / 4)} Extra Heart to the meal effect'
+            elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+                self._tmp['RNG'] += f"If there's a critical hit, adds {int((self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]) / 4)} Extra Heart to the meal effect"
+            level_str = str(int(self._tmp['EffectLevel'] / 4)) + " Extra Heart(s)"
+            effect_time_str = "None"
+        elif effect == "StaminaRecover":
+            if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
+                self._tmp['RNG'] += f'Monster Extract sets meal effect to {self._tmp['Monster Extract']['EffectLevel'][0]} Stamina Segment, either adds {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]} Stamina Segments to the meal effect'
+            elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+                self._tmp['RNG'] += f"If there's a critical hit, adds {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} Stamina Segments to the meal effect"
+            level_str = str(int(self._tmp['EffectLevel'])) + " Stamina Segment(s)"
+            effect_time_str = "None"
+        elif effect == "ExStaminaMaxUp":
+            if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
+                self._tmp['RNG'] += f'Monster Extract sets meal effect to {self._tmp['Monster Extract']['EffectLevel'][0]} Extra Stamina Segment, either adds {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]} Extra Stamina Segments to the meal effect'
+            elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+                self._tmp['RNG'] += f"If there's a critical hit, adds {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} Extra Stamina Segments to the meal effect"
+            level_str = str(int(self._tmp['EffectLevel'])) + " Extra Stamina Segment(s)"
+            effect_time_str = "None"
+        elif effect == "LifeRepair":
+            if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
+                self._tmp['RNG'] += f'Monster Extract sets meal effect to {int(self._tmp['Monster Extract']['EffectLevel'][0] / 4)} Ungloomed Heart, either adds {int((self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]) / 4)} Ungloomed Heart to the meal effect'
+            elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+                self._tmp['RNG'] += f"If there's a critical hit, adds {int((self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]) / 4)} Ungloomed Heart to the meal effect"
+            level_str = str(int(self._tmp['EffectLevel'] / 4)) + " Unloomed Hearts"
+            effect_time_str = "None"
+        else:
+            if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
+                self._tmp['RNG'] += f'Monster Extract sets effect level to {self._tmp['Monster Extract']['EffectLevel'][0]}, either adds {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]} level(s) to the effect'
+            elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+                self._tmp['RNG'] += f"If there's a critical hit, adds {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} level(s) to the effect"
+            level_str = str(self._tmp['EffectLevel'])
 
         # desc
 
