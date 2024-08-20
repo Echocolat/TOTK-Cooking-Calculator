@@ -670,7 +670,7 @@ class TotKCookSim():
             heart_str1 = "None" if heart_str1 == "" else heart_str1
             heart_str2 = "None" if heart_str2 == "" else heart_str2
             if self._monster_extract_only_health_random_flag or self._monster_extract_health_level_random_flag:
-                self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either health recovery gets 3 additional hearts"
+                self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
         elif self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag:
             whole_heart0, quarter_heart0 = divmod(self._tmp['Critical']['HitPointRecover'][0], 4)
             whole_heart0, quarter_heart0 = int(whole_heart0), int(quarter_heart0)
@@ -691,7 +691,7 @@ class TotKCookSim():
             heart_str0 = "None" if heart_str0 == "" else heart_str0
             heart_str1 = "None" if heart_str1 == "" else heart_str1
             if self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
-                self._tmp['RNG'] += f"If there's a critical hit, health recovery gets 3 additional hearts"
+                self._tmp['RNG'] += f"If there's a critical hit, adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
         whole_heart, quarter_heart = divmod(self._tmp['HitPointRecover'], 4)
         whole_heart, quarter_heart = int(whole_heart), int(quarter_heart)
         if effect == 'LifeMaxUp' or self._tmp['HitPointRecover'] == self.effect['LifeRecover'].get('MaxLv'):
@@ -819,5 +819,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Ruby"])
+    output = meal.cook(["Apple"])
     print(output)
