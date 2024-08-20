@@ -529,13 +529,15 @@ class TotKCookSim():
         recipe = self._tmp['Recipe']
         effect = self._tmp.get('Effect')
 
-        # bonus time
+        # Bonus meal time
         if self._monster_extract_time_flag:
             self._tmp['Monster Extract']['EffectTime'] = [min(self._tmp['Monster Extract']['EffectTime'][0] + recipe.get('BonusTime', 0), 1800), min(self._tmp['Monster Extract']['EffectTime'][1] + recipe.get('BonusTime', 0), 1800), min(self._tmp['Monster Extract']['EffectTime'][2] + recipe.get('BonusTime', 0), 1800)]
         elif self._critical_only_time_flag or self._critical_health_time_flag or self._critical_health_level_time_flag:
             self._tmp['Critical']['EffectTime'] = [min(self._tmp['Critical']['EffectTime'][0] + recipe.get('BonusTime', 0), 1800), min(self._tmp['Critical']['EffectTime'][1] + recipe.get('BonusTime', 0), 1800)]
+        # adds the meal's BonusTime if it exists, and sets EffectTime to 1800 if it's >= 1800
         self._tmp['EffectTime'] = min(self._tmp['EffectTime'] + recipe.get('BonusTime', 0), 1800)
-        # bonus health
+
+        # Bonus meal health
         if self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag or self._critical_only_health_flag:
             self._tmp['Critical']['HitPointRecover'] = [min(120, self._tmp['Critical']['HitPointRecover'][0] + recipe.get('BonusHeart', 0)), min(120, self._tmp['Critical']['HitPointRecover'][1] + recipe.get('BonusHeart', 0))]
             self._tmp['Critical']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv') if self._tmp['Critical']['HitPointRecover'][0] == 120 else self._tmp['Critical']['HitPointRecover'][0], self.effect['LifeRecover'].get('MaxLv') if self._tmp['Critical']['HitPointRecover'][1] == 120 else self._tmp['Critical']['HitPointRecover'][1]]
@@ -550,11 +552,16 @@ class TotKCookSim():
                 self._tmp['Monster Extract']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv'), self.effect['LifeRecover'].get('MaxLv'), self.effect['LifeRecover'].get('MaxLv')]
             if effect == None:
                 self._tmp['Monster Extract']['HitPointRecover'] = [1 if self._tmp['Monster Extract']['HitPointRecover'][0] == 0 else self._tmp['Monster Extract']['HitPointRecover'][0], 1 if self._tmp['Monster Extract']['HitPointRecover'][1] == 0 else self._tmp['Monster Extract']['HitPointRecover'][1], 1 if self._tmp['Monster Extract']['HitPointRecover'][2] == 0 else self._tmp['Monster Extract']['HitPointRecover'][2]]
+        
+        # adds the meal's BonusHeart if it exists, and sets HitPointRecover to 120 if it's >= 120
         self._tmp['HitPointRecover'] = min(120, self._tmp['HitPointRecover'] + recipe.get('BonusHeart', 0))
+        # if HitPointRecover is 120, set it to LifeRecover's MaxLv e.g. 160
         self._tmp['HitPointRecover'] = self.effect['LifeRecover'].get('MaxLv') if self._tmp['HitPointRecover'] == 120 else self._tmp['HitPointRecover']
+        # if no effect and no health recovery, sets health recovery to 1 (there is no meal with no effect and no health recovery)
         if effect == None:
             self._tmp['HitPointRecover'] = 1 if self._tmp['HitPointRecover'] == 0 else self._tmp['HitPointRecover']
-        # clamping effect
+
+        # Clamping Effect
         if effect:
             if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
                 self._tmp['Monster Extract']['EffectLevel'] = [min(self.effect[effect].get('MaxLv'), self._tmp['Monster Extract']['EffectLevel'][0]), min(self.effect[effect].get('MaxLv'), self._tmp['Monster Extract']['EffectLevel'][1]), min(self.effect[effect].get('MaxLv'), self._tmp['Monster Extract']['EffectLevel'][2])]
@@ -570,25 +577,41 @@ class TotKCookSim():
                     self._tmp['Critical']['EffectLevel'] = [4 * round(self._tmp['Critical']['EffectLevel'][0] / 4), 4 * round(self._tmp['Critical']['EffectLevel'][1] / 4)]
                     self._tmp['Critical']['EffectLevel'] = [4 if self._tmp['Critical']['EffectLevel'][0] <= 4.0 and self._tmp['Critical']['EffectLevel'][0] > 0 else self._tmp['Critical']['EffectLevel'][0], 4 if self._tmp['Critical']['EffectLevel'][1] <= 4.0 and self._tmp['Critical']['EffectLevel'][1] > 0 else self._tmp['Critical']['EffectLevel'][1]]
                 self._tmp['Critical']['EffectLevel'] = [math.floor(self._tmp['Critical']['EffectLevel'][0]), math.floor(self._tmp['Critical']['EffectLevel'][1])]
+            
+            # Sets EffectLevel to its MaxLv if EffectLevel >= MaxLv
             self._tmp['EffectLevel'] = min(self.effect[effect].get('MaxLv'), self._tmp['EffectLevel'])
+            # Sets EffectLevel to 1.0 if EffectLevel between 0 (not included) and 1
             self._tmp['EffectLevel'] = 1.0 if self._tmp['EffectLevel'] <= 1.0 and self._tmp['EffectLevel'] > 0 else self._tmp['EffectLevel']
+            # Rounds to the nearest 4 so that only whole hearts are allowed for Extra Hearts and Gloom Recovery
             if effect in ['LifeMaxUp', 'LifeRepair']:
                 self._tmp['EffectLevel'] = 4 * round(self._tmp['EffectLevel'] / 4)
                 self._tmp['EffectLevel'] = 4 if self._tmp['EffectLevel'] <= 4.0 and self._tmp['EffectLevel'] > 0 else self._tmp['EffectLevel']
+            # Final effect level is floored
             self._tmp['EffectLevel'] = math.floor(self._tmp['EffectLevel'])
 
     def _sell_price(self):
+
+        """Calculates the sell price of the meal."""
+
+        # initialize sell price
         selling_price = 0
         materials_list = self._tmp['Materials']
+
+        # cycle through all materials, if they have CookLowPrice add 1, else add their sell price
         for material in materials_list:
             if material.get('CookLowPrice', False):
                 selling_price += 1
             else:
                 selling_price += material.get('SellingPrice', 0)
+
+        # multiply by the sell rate (defined by amount of materials) and round down
         for item in self.system_data['PriceRateList']:
             if item['MaterialNum'] == len(materials_list):
                 self._tmp['SellingPrice'] = math.floor(selling_price * item['Rate'])
-                return 
+            self._tmp['SellingPrice'] = max(self._tmp['SellingPrice'], 3)
+            if self._tmp['Recipe']['ResultActorName'] == self.system_data['FairyActorName']:
+                self._tmp['SellingPrice'] = 2
+
         return
 
     def _super_success_rate(self):
@@ -605,26 +628,21 @@ class TotKCookSim():
                 return
 
     def _special_cases(self):
-        self._tmp['RNG'] = ''
 
         # special deal
         recipe = self._tmp['Recipe']
-        if recipe['ResultActorName'] == 'Item_Cook_O_02':
-            self._tmp['HitPointRecover'] = self.system_data['FailLifeRecover']
+        if recipe['ResultActorName'] in ['Item_Cook_O_02', self.system_data['SubtleLifeRecover']]:
+            if recipe['ResultActorName'] == "Item_Cook_O_02":
+                self._tmp['HitPointRecover'] = self.system_data['FailLifeRecover']
+            else:
+                self._tmp['HitPointRecover'] = self.system_data['SubtleLifeRecover']
             self._tmp['Effect'] = None
             self._tmp['EffectTime'] = 0
             self._tmp['EffectLevel'] = 0
-            self._tmp['SellingPrice'] = 2
-        elif recipe['ResultActorName'] == self.system_data['FailActorName']:
-            self._tmp['HitPointRecover'] = self.system_data['SubtleLifeRecover']
-            self._tmp['Effect'] = None
-            self._tmp['EffectTime'] = 0
-            self._tmp['EffectLevel'] = 0
-            self._tmp['SellingPrice'] = 2
-        elif recipe['ResultActorName'] == self.system_data['FairyActorName']:
             self._tmp['SellingPrice'] = 2
 
     def _finish(self):
+        self._tmp['RNG'] = ''
         result_actor_name = self._tmp['Recipe']['ResultActorName']
         effect = self._tmp.get('Effect')
         locale_actor_name = self._locale_dict['Meal'][f'{result_actor_name}_Name'][self.area_lang]
