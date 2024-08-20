@@ -163,7 +163,7 @@ class TotKCookSim():
         for material in materials_list:
             hitpoint_recover += material.get('HitPointRecover', 0)
         
-        if recipe['ResultActorName'] == 'Item_Cook_O_01':
+        if recipe['ResultActorName'] == self.system_data['FailActorName']:
             life_recover_rate = self.system_data['SubtleLifeRecoverRate']
         else:
             life_recover_rate = self.system_data['LifeRecoverRate']
@@ -250,11 +250,13 @@ class TotKCookSim():
         self._monster_extract_health_level_random_flag = False
         self._monster_extract_only_level_flag = False
         self._monster_extract_flag = False
+        if self._tmp['Recipe']['ResultActorName'] in [self.system_data['FailActorName'], "Item_Cook_O_02"]:
+            return
 
         for mat in materials_list:
             if mat.get("ActorName") == "Item_Material_08":
                 self._monster_extract_flag = True
-        if self._monster_extract_flag and not self._tmp['Recipe']['ResultActorName'] in ['Item_Cook_O_01', "Item_Cook_O_02"]:
+        if self._monster_extract_flag:
             self._tmp['Monster Extract'] = {}
             if effect != None and effect_time > 0:
                 # monster extract sets time
@@ -290,7 +292,10 @@ class TotKCookSim():
         self._critical_health_level_time_flag = False
         self._critical_only_level_flag = False
         self._critical_flag = False
-        if not self._monster_extract_flag and self._tmp['SuperSuccessRate'] > 0 and not self._tmp['Recipe']['ResultActorName'] in ['Item_Cook_O_01', "Item_Cook_O_02"]:
+        if self._tmp['Recipe']['ResultActorName'] in [self.system_data['FailActorName'], "Item_Cook_O_02"]:
+            return
+
+        if not self._monster_extract_flag:
             self._critical_flag = True
             self._tmp['Critical'] = {}
             if effect_level <= 1.0:
@@ -336,7 +341,7 @@ class TotKCookSim():
                 self._tmp['Critical']['EffectTime'] = [effect_time, effect_time + self.system_data.get('SuperSuccessAddEffectiveTime')]
 
     def _spice(self):
-        if self._tmp['Recipe']['ResultActorName'] == 'Item_Cook_O_01':
+        if self._tmp['Recipe']['ResultActorName'] == self.system_data['FailActorName']:
             return
         materials_list = self._tmp['Materials']
         effect_level = self._tmp['EffectLevel']
@@ -423,7 +428,7 @@ class TotKCookSim():
             self._tmp['EffectTime'] = 0
             self._tmp['EffectLevel'] = 0
             self._tmp['SellingPrice'] = 2
-        elif recipe['ResultActorName'] == 'Item_Cook_O_01':
+        elif recipe['ResultActorName'] == self.system_data['FailActorName']:
             self._tmp['HitPointRecover'] = max(self.system_data['SubtleLifeRecover'], self._tmp['HitPointRecover'])
             self._tmp['Effect'] = None
             self._tmp['EffectTime'] = 0
@@ -618,5 +623,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Apple"])
+    output = meal.cook(["Bokoblin Horn", "Star Fragment"])
     print(output)
