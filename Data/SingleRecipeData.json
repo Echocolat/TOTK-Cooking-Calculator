@@ -138,13 +138,5 @@
         "PictureBookNum": 145,
         "SingleRecipeMaterialNum": 1,
         "IsSingleRecipe": true
-    },
-    {
-        "ResultActorName": "Item_Cook_O_01",
-        "Recipe": "CookEnemy or CookInsect",
-        "Icon": "assets/icon/Item_Cook_O_01.png",
-        "PictureBookNum": 145,
-        "SingleRecipeMaterialNum": 1,
-        "IsSingleRecipe": true
     }
 ]

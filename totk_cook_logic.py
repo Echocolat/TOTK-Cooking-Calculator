@@ -77,6 +77,12 @@ class TotKCookSim():
         return
     
     def _recipe(self):
+        self._tmp['Recipe'] = {
+            "ResultActorName": "Item_Cook_O_01",
+            "Recipe": "CookEnemy or CookInsect",
+            "PictureBookNum": 145,
+            "SingleRecipeMaterialNum": 1
+        }
         materials_list = self._tmp['Materials']
         materials_name_tag = []
         for material in materials_list:
@@ -343,6 +349,7 @@ class TotKCookSim():
     def _spice(self):
         if self._tmp['Recipe']['ResultActorName'] == self.system_data['FailActorName']:
             return
+        effect = self._tmp['Effect']
         materials_list = self._tmp['Materials']
         effect_level = self._tmp['EffectLevel']
         effect_time = self._tmp['EffectTime']
@@ -361,6 +368,21 @@ class TotKCookSim():
                 elif self._monster_extract_time_flag:
                     self._tmp['Monster Extract']['EffectTime'] = [self._tmp['Monster Extract']['EffectTime'][0] + material.get('SpiceBoostEffectiveTime', 0), self._tmp['Monster Extract']['EffectTime'][1] + material.get('SpiceBoostEffectiveTime', 0), self._tmp['Monster Extract']['EffectTime'][2] + material.get('SpiceBoostEffectiveTime', 0)]
                 effect_time += material.get('SpiceBoostEffectiveTime', 0)
+            if material.get('CookTag') == "CookSpice":
+                # yellow health spice
+                if effect == "LifeMaxUp":
+                    if self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+                        self._tmp['Critical']['EffectLevel'] = [self.tmp['Critical']['EffectLevel'][0] + material.get('SpiceBoostMaxHeartLevel', 0), self.tmp['Critical']['EffectLevel'][1] + material.get('SpiceBoostMaxHeartLevel', 0)]
+                    elif self._monster_extract_health_level_random_flag or self._monster_extract_only_level_flag:
+                        self._tmp['Monster Extract']['EffectLevel'] = [self.tmp['Monster Extract']['EffectLevel'][0] + material.get('SpiceBoostMaxHeartLevel', 0), self.tmp['Monster Extract']['EffectLevel'][1] + material.get('SpiceBoostMaxHeartLevel', 0), self.tmp['Monster Extract']['EffectLevel'][2] + material.get('SpiceBoostMaxHeartLevel', 0)]
+                    effect_level += material.get('SpiceBoostMaxHeartLevel', 0)
+                # tamina spice
+                elif effect in ['StaminaRecover', 'ExStaminaMaxUp']:
+                    if self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+                        self._tmp['Critical']['EffectLevel'] = [self.tmp['Critical']['EffectLevel'][0] + material.get('SpiceBoostStaminaLevel', 0), self.tmp['Critical']['EffectLevel'][1] + material.get('SpiceBoostStaminaLevel', 0)]
+                    elif self._monster_extract_health_level_random_flag or self._monster_extract_only_level_flag:
+                        self._tmp['Monster Extract']['EffectLevel'] = [self.tmp['Monster Extract']['EffectLevel'][0] + material.get('SpiceBoostStaminaLevel', 0), self.tmp['Monster Extract']['EffectLevel'][1] + material.get('SpiceBoostStaminaLevel', 0), self.tmp['Monster Extract']['EffectLevel'][2] + material.get('SpiceBoostStaminaLevel', 0)]
+                    effect_level += material.get('SpiceBoostStaminaLevel', 0)
 
         self._tmp['EffectLevel'] = effect_level
         self._tmp['EffectTime'] = effect_time
@@ -378,20 +400,20 @@ class TotKCookSim():
         # bonus health
         if self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag or self._critical_only_health_flag or self._monster_extract_only_health_random_flag:
             self._tmp['Critical']['HitPointRecover'] = [min(120, self._tmp['Critical']['HitPointRecover'][0] + recipe.get('BonusHeart', 0)), min(120, self._tmp['Critical']['HitPointRecover'][1] + recipe.get('BonusHeart', 0))]
-            self._tmp['Critical']['HitPointRecover'] = [160 if self._tmp['Critical']['HitPointRecover'][0] == 120 else self._tmp['Critical']['HitPointRecover'][0], 160 if self._tmp['Critical']['HitPointRecover'][1] == 120 else self._tmp['Critical']['HitPointRecover'][1]]
+            self._tmp['Critical']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv') if self._tmp['Critical']['HitPointRecover'][0] == 120 else self._tmp['Critical']['HitPointRecover'][0], self.effect['LifeRecover'].get('MaxLv') if self._tmp['Critical']['HitPointRecover'][1] == 120 else self._tmp['Critical']['HitPointRecover'][1]]
             if effect == 'LifeMaxUp':
-                self._tmp['Critical']['HitPointRecover'] = [160, 160]
+                self._tmp['Critical']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv'), self.effect['LifeRecover'].get('MaxLv')]
             if effect == None:
                 self._tmp['Critical']['HitPointRecover'] = [1 if self._tmp['Critical']['HitPointRecover'][0] == 0 else self._tmp['Critical']['HitPointRecover'][0], 1 if self._tmp['Critical']['HitPointRecover'][1] == 0 else self._tmp['Critical']['HitPointRecover'][1]]
         elif self._monster_extract_health_level_random_flag:
             self._tmp['Monster Extract']['HitPointRecover'] = [min(120, self._tmp['Monster Extract']['HitPointRecover'][0] + recipe.get('BonusHeart', 0)), min(120, self._tmp['Monster Extract']['HitPointRecover'][1] + recipe.get('BonusHeart', 0)), min(120, self._tmp['Monster Extract']['HitPointRecover'][2] + recipe.get('BonusHeart', 0))]
-            self._tmp['Monster Extract']['HitPointRecover'] = [160 if self._tmp['Monster Extract']['HitPointRecover'][0] == 120 else self._tmp['Monster Extract']['HitPointRecover'][0], 160 if self._tmp['Monster Extract']['HitPointRecover'][1] == 120 else self._tmp['Monster Extract']['HitPointRecover'][1], 160 if self._tmp['Monster Extract']['HitPointRecover'][2] == 120 else self._tmp['Monster Extract']['HitPointRecover'][2]]
+            self._tmp['Monster Extract']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv') if self._tmp['Monster Extract']['HitPointRecover'][0] == 120 else self._tmp['Monster Extract']['HitPointRecover'][0], self.effect['LifeRecover'].get('MaxLv') if self._tmp['Monster Extract']['HitPointRecover'][1] == 120 else self._tmp['Monster Extract']['HitPointRecover'][1], self.effect['LifeRecover'].get('MaxLv') if self._tmp['Monster Extract']['HitPointRecover'][2] == 120 else self._tmp['Monster Extract']['HitPointRecover'][2]]
             if effect == 'LifeMaxUp':
-                self._tmp['Monster Extract']['HitPointRecover'] = [160, 160, 160]
+                self._tmp['Monster Extract']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv'), self.effect['LifeRecover'].get('MaxLv'), self.effect['LifeRecover'].get('MaxLv')]
             if effect == None:
                 self._tmp['Monster Extract']['HitPointRecover'] = [1 if self._tmp['Monster Extract']['HitPointRecover'][0] == 0 else self._tmp['Monster Extract']['HitPointRecover'][0], 1 if self._tmp['Monster Extract']['HitPointRecover'][1] == 0 else self._tmp['Monster Extract']['HitPointRecover'][1], 1 if self._tmp['Monster Extract']['HitPointRecover'][2] == 0 else self._tmp['Monster Extract']['HitPointRecover'][2]]
         self._tmp['HitPointRecover'] = min(120, self._tmp['HitPointRecover'] + recipe.get('BonusHeart', 0))
-        self._tmp['HitPointRecover'] = 160 if self._tmp['HitPointRecover'] == 120 else self._tmp['HitPointRecover']
+        self._tmp['HitPointRecover'] = self.effect['LifeRecover'].get('MaxLv') if self._tmp['HitPointRecover'] == 120 else self._tmp['HitPointRecover']
         if effect == None:
             self._tmp['HitPointRecover'] = 1 if self._tmp['HitPointRecover'] == 0 else self._tmp['HitPointRecover']
         # clamping effect
@@ -413,8 +435,8 @@ class TotKCookSim():
             self._tmp['EffectLevel'] = min(self.effect[effect].get('MaxLv'), self._tmp['EffectLevel'])
             self._tmp['EffectLevel'] = 1.0 if self._tmp['EffectLevel'] <= 1.0 and self._tmp['EffectLevel'] > 0 else self._tmp['EffectLevel']
             if effect in ['LifeMaxUp', 'LifeRepair']:
-                self._tmp['EffectLevel'] = 4 * round(self._tmp['EffectLevel'][0] / 4)
-                self._tmp['EffectLevel'] = 4 if self._tmp['EffectLevel'][0] <= 4.0 and self._tmp['EffectLevel'][0] > 0 else self._tmp['EffectLevel'][0]
+                self._tmp['EffectLevel'] = 4 * round(self._tmp['EffectLevel'] / 4)
+                self._tmp['EffectLevel'] = 4 if self._tmp['EffectLevel'] <= 4.0 and self._tmp['EffectLevel'] > 0 else self._tmp['EffectLevel']
             self._tmp['EffectLevel'] = math.floor(self._tmp['EffectLevel'])
 
     def _special_deal(self):
@@ -423,18 +445,18 @@ class TotKCookSim():
         # special deal
         recipe = self._tmp['Recipe']
         if recipe['ResultActorName'] == 'Item_Cook_O_02':
-            self._tmp['HitPointRecover'] = 1
+            self._tmp['HitPointRecover'] = self.system_data['FailLifeRecover']
             self._tmp['Effect'] = None
             self._tmp['EffectTime'] = 0
             self._tmp['EffectLevel'] = 0
             self._tmp['SellingPrice'] = 2
         elif recipe['ResultActorName'] == self.system_data['FailActorName']:
-            self._tmp['HitPointRecover'] = max(self.system_data['SubtleLifeRecover'], self._tmp['HitPointRecover'])
+            self._tmp['HitPointRecover'] = self.system_data['SubtleLifeRecover']
             self._tmp['Effect'] = None
             self._tmp['EffectTime'] = 0
             self._tmp['EffectLevel'] = 0
             self._tmp['SellingPrice'] = 2
-        elif recipe['ResultActorName'] == 'Item_Cook_C_16':
+        elif recipe['ResultActorName'] == self.system_data['FairyActorName']:
             self._tmp['SellingPrice'] = 2
 
     def _english(self):
@@ -455,6 +477,8 @@ class TotKCookSim():
             locale_buff_name = "None"
 
         # effect time
+        crit_time_min, crit_time_sec = divmod(self.system_data['SuperSuccessAddEffectiveTime'], 60)
+        crit_time_string = "{:02d}:{:02d}".format(int(crit_time_min), int(crit_time_sec))
         if self._monster_extract_time_flag:
             minutes0, seconds0 = divmod(self._tmp['Monster Extract']['EffectTime'][0], 60)
             minutes1, seconds1 = divmod(self._tmp['Monster Extract']['EffectTime'][1], 60)
@@ -468,7 +492,7 @@ class TotKCookSim():
             minutes1, seconds1 = divmod(self._tmp['Critical']['EffectTime'][1], 60)
             effect_time_str0 = "{:02d}:{:02d}".format(int(minutes0), int(seconds0))
             effect_time_str1 = "{:02d}:{:02d}".format(int(minutes1), int(seconds1))
-            self._tmp['RNG'] += f"If there's a critical hit, duration gets a 5:00 increase"
+            self._tmp['RNG'] += f"If there's a critical hit, duration gets a {crit_time_string} increase"
         minutes, seconds = divmod(self._tmp['EffectTime'], 60)
         effect_time_str = "{:02d}:{:02d}".format(int(minutes), int(seconds))
 
@@ -486,19 +510,19 @@ class TotKCookSim():
             whole_heart1, quarter_heart1 = int(whole_heart1), int(quarter_heart1)
             whole_heart2, quarter_heart2 = divmod(self._tmp['Monster Extract']['HitPointRecover'][2], 4)
             whole_heart2, quarter_heart2 = int(whole_heart2), int(quarter_heart2)
-            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][0] == 160.0:
+            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][0] == self.effect['LifeRecover'].get('MaxLv'):
                 heart_str0 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
             else:
                 heart_str0 = '♥' * whole_heart0
                 if quarter_heart0:
                     heart_str0 += quarter_heart_map[quarter_heart0]+'♥'
-            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][1] == 160.0:
+            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][1] == self.effect['LifeRecover'].get('MaxLv'):
                 heart_str1 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
             else:
                 heart_str1 = '♥' * whole_heart1
                 if quarter_heart1:
                     heart_str1 += quarter_heart_map[quarter_heart1]+'♥'
-            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][2] == 160.0:
+            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][2] == self.effect['LifeRecover'].get('MaxLv'):
                 heart_str2 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
             else:
                 heart_str2 = '♥' * whole_heart2
@@ -507,24 +531,20 @@ class TotKCookSim():
             heart_str0 = "None" if heart_str0 == "" else heart_str0
             heart_str1 = "None" if heart_str1 == "" else heart_str1
             heart_str2 = "None" if heart_str2 == "" else heart_str2
-            if self._monster_extract_only_health_random_flag:
-                # 50% set to 1, 50% +3 hearts
-                self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either health recovery gets 3 additional hearts"
-            elif self._monster_extract_health_level_random_flag:
-                # 25% set to 1, 25% +3 hearts, 50% no change
+            if self._monster_extract_only_health_random_flag or self._monster_extract_health_level_random_flag:
                 self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either health recovery gets 3 additional hearts"
         elif self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag:
             whole_heart0, quarter_heart0 = divmod(self._tmp['Critical']['HitPointRecover'][0], 4)
             whole_heart0, quarter_heart0 = int(whole_heart0), int(quarter_heart0)
             whole_heart1, quarter_heart1 = divmod(self._tmp['Critical']['HitPointRecover'][1], 4)
             whole_heart1, quarter_heart1 = int(whole_heart1), int(quarter_heart1)
-            if effect == 'LifeMaxUp' or self._tmp['Critical']['HitPointRecover'][0] == 160.0:
+            if effect == 'LifeMaxUp' or self._tmp['Critical']['HitPointRecover'][0] == self.effect['LifeRecover'].get('MaxLv'):
                 heart_str0 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
             else:
                 heart_str0 = '♥' * whole_heart0
                 if quarter_heart0:
                     heart_str0 += quarter_heart_map[quarter_heart0]+'♥'
-            if effect == 'LifeMaxUp' or self._tmp['Critical']['HitPointRecover'][1] == 160.0:
+            if effect == 'LifeMaxUp' or self._tmp['Critical']['HitPointRecover'][1] == self.effect['LifeRecover'].get('MaxLv'):
                 heart_str1 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
             else:
                 heart_str1 = '♥' * whole_heart1
@@ -536,7 +556,7 @@ class TotKCookSim():
                 self._tmp['RNG'] += f"If there's a critical hit, health recovery gets 3 additional hearts"
         whole_heart, quarter_heart = divmod(self._tmp['HitPointRecover'], 4)
         whole_heart, quarter_heart = int(whole_heart), int(quarter_heart)
-        if effect == 'LifeMaxUp' or self._tmp['HitPointRecover'] == 160.0:
+        if effect == 'LifeMaxUp' or self._tmp['HitPointRecover'] == self.effect['LifeRecover'].get('MaxLv'):
             heart_str = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
         else:
             heart_str = '♥' * whole_heart 
@@ -623,5 +643,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Bokoblin Horn", "Star Fragment"])
+    output = meal.cook(["Hearty Truffle"])
     print(output)
