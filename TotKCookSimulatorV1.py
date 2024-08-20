@@ -2,7 +2,7 @@ import os, sys
 import traceback
 import customtkinter as ctk
 import tkinter as tk
-from Cooking import TotKCookSim
+from totk_cook_logic import TotKCookSim
 from PIL import Image
 
 try:
