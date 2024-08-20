@@ -274,6 +274,11 @@ class TotKCookSim():
             effect_level = 0.0
             effect_time = 0
 
+        # just to make sure
+        if effect_type in ['LifeMaxUp', 'StaminaRecover', 'ExStaminaMaxUp', 'LifeRepair']:
+            effect_level = 0.0
+            effect_time = 0
+
         self._tmp['Effect'] = effect_type
         self._tmp['EffectLevel'] = effect_level
         self._tmp['EffectTime'] = effect_time
@@ -302,33 +307,43 @@ class TotKCookSim():
         return
 
     def _monster_extract(self):
+
+        """Handles Monster Extract shenanigans (mainly starts holding data for all possibilities)"""
+
         materials_list = self._tmp['Materials']
         effect = self._tmp['Effect']
         effect_level = self._tmp['EffectLevel']
         effect_time = self._tmp['EffectTime']
         hitpoint_recover = self._tmp['HitPointRecover']
+
+        # initialize all flags
         self._monster_extract_time_flag = False
         self._monster_extract_only_health_up_flag = False
         self._monster_extract_only_health_random_flag = False
         self._monster_extract_health_level_random_flag = False
         self._monster_extract_only_level_flag = False
         self._monster_extract_flag = False
+
+        # monster extract has no effect on failed meal & rock hard food
         if self._tmp['Recipe']['ResultActorName'] in [self.system_data['FailActorName'], "Item_Cook_O_02"]:
             return
 
+        # check for monster extract presence
         for mat in materials_list:
-            if mat.get("ActorName") == "Item_Material_08":
+            if mat.get("ActorName") == self.system_data['EnemyExtractActorName']:
                 self._monster_extract_flag = True
+
         if self._monster_extract_flag:
+            # initiate monster extract section
             self._tmp['Monster Extract'] = {}
             if effect != None and effect_time > 0:
-                # monster extract sets time
+                # this always happens as long as the meal has an effect with a duration
                 self._monster_extract_time_flag = True
                 self._tmp['Monster Extract']['EffectTime'] = [60, 600, 1800]
             if (hitpoint_recover == 0 and effect != None) or effect == 'LifeMaxUp':
                 # if the meal is not regenerative but has an effect, or is a hearty meal
                 self._monster_extract_only_level_flag = True
-                self._tmp['Monster Extract']['EffectLevel'] = [self.effect[effect].get('MinLv'), effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
+                self._tmp['Monster Extract']['EffectLevel'] = [self.effect[effect].get('MinLv'), effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
             elif (hitpoint_recover == 0 and effect != None):
                 # if the meal is not regenerative and has no effect (?)
                 self._monster_extract_only_health_up_flag = True
@@ -341,7 +356,7 @@ class TotKCookSim():
             else:
                 # if the meal is regenerative with no effect
                 self._monster_extract_only_health_random_flag = True
-                self._tmp['Monster Extract']['HitPointRecover'] = [1, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
+                self._tmp['Monster Extract']['HitPointRecover'] = [1, hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
 
     def _critical(self):
         effect = self._tmp['Effect']
@@ -414,9 +429,9 @@ class TotKCookSim():
         for material in materials_list:
             if material.get('CookTag') != "CookEnemy":
                 # health spice
-                if self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag or self._critical_only_health_flag or self._monster_extract_only_health_random_flag:
+                if self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag or self._critical_only_health_flag:
                     self._tmp['Critical']['HitPointRecover'] = [self._tmp['Critical']['HitPointRecover'][0] + material.get('SpiceBoostHitPointRecover', 0), self._tmp['Critical']['HitPointRecover'][1] + material.get('SpiceBoostHitPointRecover', 0)]
-                elif self._monster_extract_health_level_random_flag:
+                elif self._monster_extract_health_level_random_flag or self._monster_extract_only_health_random_flag:
                     self._tmp['Monster Extract']['HitPointRecover'] = [self._tmp['Monster Extract']['HitPointRecover'][0] + material.get('SpiceBoostHitPointRecover', 0), self._tmp['Monster Extract']['HitPointRecover'][1] + material.get('SpiceBoostHitPointRecover', 0), self._tmp['Monster Extract']['HitPointRecover'][2] + material.get('SpiceBoostHitPointRecover', 0)]
                 hitpoint_recover += material.get('SpiceBoostHitPointRecover', 0)
                 # time spice
@@ -429,16 +444,16 @@ class TotKCookSim():
                 # yellow health spice
                 if effect == "LifeMaxUp":
                     if self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
-                        self._tmp['Critical']['EffectLevel'] = [self.tmp['Critical']['EffectLevel'][0] + material.get('SpiceBoostMaxHeartLevel', 0), self.tmp['Critical']['EffectLevel'][1] + material.get('SpiceBoostMaxHeartLevel', 0)]
+                        self._tmp['Critical']['EffectLevel'] = [self._tmp['Critical']['EffectLevel'][0] + material.get('SpiceBoostMaxHeartLevel', 0), self._tmp['Critical']['EffectLevel'][1] + material.get('SpiceBoostMaxHeartLevel', 0)]
                     elif self._monster_extract_health_level_random_flag or self._monster_extract_only_level_flag:
-                        self._tmp['Monster Extract']['EffectLevel'] = [self.tmp['Monster Extract']['EffectLevel'][0] + material.get('SpiceBoostMaxHeartLevel', 0), self.tmp['Monster Extract']['EffectLevel'][1] + material.get('SpiceBoostMaxHeartLevel', 0), self.tmp['Monster Extract']['EffectLevel'][2] + material.get('SpiceBoostMaxHeartLevel', 0)]
+                        self._tmp['Monster Extract']['EffectLevel'] = [self._tmp['Monster Extract']['EffectLevel'][0] + material.get('SpiceBoostMaxHeartLevel', 0), self._tmp['Monster Extract']['EffectLevel'][1] + material.get('SpiceBoostMaxHeartLevel', 0), self._tmp['Monster Extract']['EffectLevel'][2] + material.get('SpiceBoostMaxHeartLevel', 0)]
                     effect_level += material.get('SpiceBoostMaxHeartLevel', 0)
-                # tamina spice
+                # stamina spice
                 elif effect in ['StaminaRecover', 'ExStaminaMaxUp']:
                     if self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
-                        self._tmp['Critical']['EffectLevel'] = [self.tmp['Critical']['EffectLevel'][0] + material.get('SpiceBoostStaminaLevel', 0), self.tmp['Critical']['EffectLevel'][1] + material.get('SpiceBoostStaminaLevel', 0)]
+                        self._tmp['Critical']['EffectLevel'] = [self._tmp['Critical']['EffectLevel'][0] + material.get('SpiceBoostStaminaLevel', 0), self._tmp['Critical']['EffectLevel'][1] + material.get('SpiceBoostStaminaLevel', 0)]
                     elif self._monster_extract_health_level_random_flag or self._monster_extract_only_level_flag:
-                        self._tmp['Monster Extract']['EffectLevel'] = [self.tmp['Monster Extract']['EffectLevel'][0] + material.get('SpiceBoostStaminaLevel', 0), self.tmp['Monster Extract']['EffectLevel'][1] + material.get('SpiceBoostStaminaLevel', 0), self.tmp['Monster Extract']['EffectLevel'][2] + material.get('SpiceBoostStaminaLevel', 0)]
+                        self._tmp['Monster Extract']['EffectLevel'] = [self._tmp['Monster Extract']['EffectLevel'][0] + material.get('SpiceBoostStaminaLevel', 0), self._tmp['Monster Extract']['EffectLevel'][1] + material.get('SpiceBoostStaminaLevel', 0), self._tmp['Monster Extract']['EffectLevel'][2] + material.get('SpiceBoostStaminaLevel', 0)]
                     effect_level += material.get('SpiceBoostStaminaLevel', 0)
 
         self._tmp['EffectLevel'] = effect_level
@@ -455,14 +470,14 @@ class TotKCookSim():
             self._tmp['Critical']['EffectTime'] = [min(self._tmp['Critical']['EffectTime'][0] + recipe.get('BonusTime', 0), 1800), min(self._tmp['Critical']['EffectTime'][1] + recipe.get('BonusTime', 0), 1800)]
         self._tmp['EffectTime'] = min(self._tmp['EffectTime'] + recipe.get('BonusTime', 0), 1800)
         # bonus health
-        if self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag or self._critical_only_health_flag or self._monster_extract_only_health_random_flag:
+        if self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag or self._critical_only_health_flag:
             self._tmp['Critical']['HitPointRecover'] = [min(120, self._tmp['Critical']['HitPointRecover'][0] + recipe.get('BonusHeart', 0)), min(120, self._tmp['Critical']['HitPointRecover'][1] + recipe.get('BonusHeart', 0))]
             self._tmp['Critical']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv') if self._tmp['Critical']['HitPointRecover'][0] == 120 else self._tmp['Critical']['HitPointRecover'][0], self.effect['LifeRecover'].get('MaxLv') if self._tmp['Critical']['HitPointRecover'][1] == 120 else self._tmp['Critical']['HitPointRecover'][1]]
             if effect == 'LifeMaxUp':
                 self._tmp['Critical']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv'), self.effect['LifeRecover'].get('MaxLv')]
             if effect == None:
                 self._tmp['Critical']['HitPointRecover'] = [1 if self._tmp['Critical']['HitPointRecover'][0] == 0 else self._tmp['Critical']['HitPointRecover'][0], 1 if self._tmp['Critical']['HitPointRecover'][1] == 0 else self._tmp['Critical']['HitPointRecover'][1]]
-        elif self._monster_extract_health_level_random_flag:
+        elif self._monster_extract_health_level_random_flag or self._monster_extract_only_health_random_flag:
             self._tmp['Monster Extract']['HitPointRecover'] = [min(120, self._tmp['Monster Extract']['HitPointRecover'][0] + recipe.get('BonusHeart', 0)), min(120, self._tmp['Monster Extract']['HitPointRecover'][1] + recipe.get('BonusHeart', 0)), min(120, self._tmp['Monster Extract']['HitPointRecover'][2] + recipe.get('BonusHeart', 0))]
             self._tmp['Monster Extract']['HitPointRecover'] = [self.effect['LifeRecover'].get('MaxLv') if self._tmp['Monster Extract']['HitPointRecover'][0] == 120 else self._tmp['Monster Extract']['HitPointRecover'][0], self.effect['LifeRecover'].get('MaxLv') if self._tmp['Monster Extract']['HitPointRecover'][1] == 120 else self._tmp['Monster Extract']['HitPointRecover'][1], self.effect['LifeRecover'].get('MaxLv') if self._tmp['Monster Extract']['HitPointRecover'][2] == 120 else self._tmp['Monster Extract']['HitPointRecover'][2]]
             if effect == 'LifeMaxUp':
@@ -651,7 +666,7 @@ class TotKCookSim():
         # level
 
         if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
-            self._tmp['RNG'] += f'Monster Extract sets effect level to {self._tmp['Monster Extract']['EffectLevel'][0]}, either effect level gets {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][2]} additional level(s)'
+            self._tmp['RNG'] += f'Monster Extract sets effect level to {self._tmp['Monster Extract']['EffectLevel'][0]}, either effect level gets {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]} additional level(s)'
         elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
             self._tmp['RNG'] += f"If there's a critical hit, effect level gets {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} additional level(s)"
         level_str = str(self._tmp['EffectLevel'])
@@ -691,8 +706,6 @@ class TotKCookSim():
         if self._result['Effect'] == "None":
             self._result['Effect duration'] = "None"
             self._result['Effect level'] = "None"
-        elif self._result['Effect'] in ['Extra Hearts', 'Stamina Recovery', 'Extra Stamina', 'Gloom Recovery']:
-            self._result['Effect duration'] = "None"
 
         if self._tmp['RNG']:
             if "If there's a critical hit, " in self._tmp['RNG']:
@@ -707,13 +720,22 @@ class TotKCookSim():
                 self._result['RNG'] = crit_text
             else:
                 me_text = "Monster Extract "
-                part_amount = self._tmp['RNG'].count("Monster Extract ")
-                if part_amount == 1:
-                    me_text += self._tmp['RNG'].split('Monster Extract ')[1]
-                elif part_amount == 2:
-                    me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and " + self._tmp['RNG'].split('Monster Extract ')[2]
+                if self._monster_extract_time_flag:
+                    part_amount = self._tmp['RNG'].count("Monster Extract ")
+                    if part_amount == 1:
+                        me_text += self._tmp['RNG'].split('Monster Extract ')[1]
+                    elif part_amount == 2:
+                        me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and, either " + self._tmp['RNG'].split('Monster Extract ')[2]
+                    else:
+                        me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and, either " + self._tmp['RNG'].split('Monster Extract ')[2] + ", either " + self._tmp['RNG'].split('Monster Extract ')[3]
                 else:
-                    me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and, either " + self._tmp['RNG'].split('Monster Extract ')[2] + ", either " + self._tmp['RNG'].split('Monster Extract ')[3]
+                    part_amount = self._tmp['RNG'].count("Monster Extract ")
+                    if part_amount == 1:
+                        me_text += "either " + self._tmp['RNG'].split('Monster Extract ')[1]
+                    elif part_amount == 2:
+                        me_text += "either " + self._tmp['RNG'].split('Monster Extract ')[1] + ", either " + self._tmp['RNG'].split('Monster Extract ')[2]
+                    else:
+                        me_text += "either " + self._tmp['RNG'].split('Monster Extract ')[1] + ", either " + self._tmp['RNG'].split('Monster Extract ')[2] + ", either " + self._tmp['RNG'].split('Monster Extract ')[3]
                 self._result['RNG'] = me_text
 
         # Item_Cook_C_17

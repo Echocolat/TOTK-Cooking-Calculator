@@ -15924,7 +15924,7 @@
           "USes": "tonificantes",
           "USfr": "vitalis"
       },
-      "HeartRepair_Desc": {
+      "LifeRepair_Desc": {
           "CNzh": "具有治愈被瘴气侵蚀的心心的效果。",
           "EUde": "Heilt von Miasma befallene Herzen.",
           "EUen": "Restores hearts damaged by gloom.",
@@ -15940,7 +15940,7 @@
           "USes": "Combate el daño que causa el aura maligna.",
           "USfr": "Soigne les cœurs infectés par les émanations."
       },
-      "HeartRepair_Name": {
+      "LifeRepair_Name": {
           "CNzh": "灿烂",
           "EUde": "Sol-",
           "EUen": "Sunny",
@@ -15956,7 +15956,7 @@
           "USes": "radiante",
           "USfr": "solaris"
       },
-      "HeartRepair_Name_Feminine": {
+      "LifeRepair_Name_Feminine": {
           "CNzh": "灿烂",
           "EUde": "Sol-",
           "EUen": "Sunny",
@@ -15972,7 +15972,7 @@
           "USes": "radiante",
           "USfr": "solaris"
       },
-      "HeartRepair_Name_Masculine": {
+      "LifeRepair_Name_Masculine": {
           "CNzh": "灿烂",
           "EUde": "Sol-",
           "EUen": "Sunny",
@@ -15988,7 +15988,7 @@
           "USes": "radiante",
           "USfr": "solaris"
       },
-      "HeartRepair_Name_Neuter": {
+      "LifeRepair_Name_Neuter": {
           "CNzh": "灿烂",
           "EUde": "Sol-",
           "EUen": "Sunny",
@@ -16004,7 +16004,7 @@
           "USes": "radiantes",
           "USfr": "solaris"
       },
-      "HeartRepair_Name_Plural": {
+      "LifeRepair_Name_Plural": {
           "CNzh": "灿烂",
           "EUde": "Sol-",
           "EUen": "Sunny",
