@@ -209,8 +209,6 @@ class TotKCookSim():
         """Calculates effect, effect level and effect duration"""
 
         materials_list = self._tmp['Materials']
-        # spice only applies for each unique material
-        materials_set = list({item["ActorName"]: item for item in materials_list}.values())
         recipe = self._tmp['Recipe']
         # set up flag and values
         set_effect_flag = False
@@ -221,7 +219,7 @@ class TotKCookSim():
         bonus_yellow_hearts = 0
         bonus_stamina = 0
 
-        for mat in materials_set:
+        for mat in materials_list:
             # CookEnemy Spice happens before Monster Extract and Criticals
             if mat.get('CookTag') == "CookEnemy":
                 # each material adds its SpiceBoostEffectiveTime, SpiceBoostMaxHeartLevel, SpiceBoostStaminaLevel if they exist, else 0
