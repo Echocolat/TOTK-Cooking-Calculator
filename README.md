@@ -10,7 +10,7 @@ Make sure you have the `customtkinter`, `PIL` and `tkinter` packages installed, 
 
 #### Credits
 
-- Original code by KingFoo
+- Original code by KingFoo (see their [original repo](https://github.com/KingFooZQ/Totk-Cooking-Simulator))
 - CookingMgr code retrievd by dt12345
 - Improved code, UI by Echocolat
 - Additional research by dt12345, Doge229 and Echocolat
