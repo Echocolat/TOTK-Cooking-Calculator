@@ -343,7 +343,6 @@ class TotKCookSim():
         effect_time = self._tmp['EffectTime']
         hitpoint_recover = self._tmp['HitPointRecover']
         for material in materials_list:
-            #if material.get('CookTag') == "CookSpice":
             if material.get('CookTag') != "CookEnemy":
                 # health spice
                 if self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag or self._critical_only_health_flag or self._monster_extract_only_health_random_flag:
@@ -458,18 +457,13 @@ class TotKCookSim():
             effect_time_str0 = "{:02d}:{:02d}".format(int(minutes0), int(seconds0))
             effect_time_str1 = "{:02d}:{:02d}".format(int(minutes1), int(seconds1))
             effect_time_str2 = "{:02d}:{:02d}".format(int(minutes2), int(seconds2))
-            self._tmp['RNG'] += f"Monster Extract sets time to {effect_time_str0}, or {effect_time_str1}, or {effect_time_str2} (each 33.3%)"
+            self._tmp['RNG'] += f"Monster Extract sets time to {effect_time_str0}, {effect_time_str1} or {effect_time_str2} (each 33.3%)"
         elif self._critical_only_time_flag or self._critical_health_time_flag or self._critical_health_level_time_flag:
             minutes0, seconds0 = divmod(self._tmp['Critical']['EffectTime'][0], 60)
             minutes1, seconds1 = divmod(self._tmp['Critical']['EffectTime'][1], 60)
             effect_time_str0 = "{:02d}:{:02d}".format(int(minutes0), int(seconds0))
             effect_time_str1 = "{:02d}:{:02d}".format(int(minutes1), int(seconds1))
-            if self._critical_only_time_flag:
-                self._tmp['RNG'] += f"If there's a critical hit, duration has 100% chance of getting a 5:00 increase"
-            elif self._critical_health_time_flag:
-                self._tmp['RNG'] += f"If there's a critical hit, duration has 50% chance of getting a 5:00 increase"
-            else:
-                self._tmp['RNG'] += f"If there's a critical hit, duration has 33.3% chance of getting a 5:00 increase"
+            self._tmp['RNG'] += f"If there's a critical hit, duration gets a 5:00 increase"
         minutes, seconds = divmod(self._tmp['EffectTime'], 60)
         effect_time_str = "{:02d}:{:02d}".format(int(minutes), int(seconds))
 
@@ -510,10 +504,10 @@ class TotKCookSim():
             heart_str2 = "None" if heart_str2 == "" else heart_str2
             if self._monster_extract_only_health_random_flag:
                 # 50% set to 1, 50% +3 hearts
-                self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0} or {heart_str2} (each 50%)"
+                self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either health recovery gets 3 additional hearts"
             elif self._monster_extract_health_level_random_flag:
                 # 25% set to 1, 25% +3 hearts, 50% no change
-                self._tmp['RNG'] += f"Monster Extract can set health recovery to {heart_str0} or {heart_str2} (each 25%)"
+                self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either health recovery gets 3 additional hearts"
         elif self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag:
             whole_heart0, quarter_heart0 = divmod(self._tmp['Critical']['HitPointRecover'][0], 4)
             whole_heart0, quarter_heart0 = int(whole_heart0), int(quarter_heart0)
@@ -533,15 +527,8 @@ class TotKCookSim():
                     heart_str1 += quarter_heart_map[quarter_heart1]+'♥'
             heart_str0 = "None" if heart_str0 == "" else heart_str0
             heart_str1 = "None" if heart_str1 == "" else heart_str1
-            if self._critical_only_health_flag:
-                # 100% +3 hearts
-                self._tmp['RNG'] += f"If there's a critical hit, health recovery has 100% chance of healing 3 additional hearts"
-            elif self._critical_health_level_flag or self._critical_health_time_flag:
-                # 50% +3 hearts
-                self._tmp['RNG'] += f"If there's a critical hit, health recovery has 50% chance of healing 3 additional hearts"
-            else:
-                # 33.3% +3 hearts
-                self._tmp['RNG'] += f"If there's a critical hit, health recovery has 33.3% chance of healing 3 additional hearts"
+            if self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+                self._tmp['RNG'] += f"If there's a critical hit, health recovery gets 3 additional hearts"
         whole_heart, quarter_heart = divmod(self._tmp['HitPointRecover'], 4)
         whole_heart, quarter_heart = int(whole_heart), int(quarter_heart)
         if effect == 'LifeMaxUp' or self._tmp['HitPointRecover'] == 160.0:
@@ -554,16 +541,10 @@ class TotKCookSim():
 
         # level
 
-        if self._monster_extract_only_level_flag:
-            self._tmp['RNG'] += f'Monster Extract sets effect level to {self._tmp['Monster Extract']['EffectLevel'][0]} or {self._tmp['Monster Extract']['EffectLevel'][2]} (each 50%)'
-        elif self._monster_extract_health_level_random_flag:
-            self._tmp['RNG'] += f'Monster Extract can set effect level to {self._tmp['Monster Extract']['EffectLevel'][0]} or {self._tmp['Monster Extract']['EffectLevel'][2]} (each 25%)'
-        elif self._critical_only_level_flag:
-            self._tmp['RNG'] += f"If there's a critical hit, effect level has 100% chance of getting {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} additional level(s)"
-        elif self._critical_health_level_flag:
-            self._tmp['RNG'] += f"If there's a critical hit, effect level has 50% chance of getting {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} additional level(s)"
-        elif self._critical_health_level_time_flag:
-            self._tmp['RNG'] += f"If there's a critical hit, effect level has 33.3% chance of getting {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} additional level(s)"
+        if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
+            self._tmp['RNG'] += f'Monster Extract sets effect level to {self._tmp['Monster Extract']['EffectLevel'][0]}, either effect level gets {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][2]} additional level(s)'
+        elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
+            self._tmp['RNG'] += f"If there's a critical hit, effect level gets {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} additional level(s)"
         level_str = str(self._tmp['EffectLevel'])
 
         # desc
@@ -611,9 +592,9 @@ class TotKCookSim():
                 if part_amount == 1:
                     crit_text += self._tmp['RNG'].split("If there's a critical hit, ")[1]
                 elif part_amount == 2:
-                    crit_text += self._tmp['RNG'].split("If there's a critical hit, ")[1] + " and " + self._tmp['RNG'].split("If there's a critical hit, ")[2]
+                    crit_text += "either " + self._tmp['RNG'].split("If there's a critical hit, ")[1] + ", either " + self._tmp['RNG'].split("If there's a critical hit, ")[2]
                 else:
-                    crit_text += self._tmp['RNG'].split("If there's a critical hit, ")[1] + ", " + self._tmp['RNG'].split("If there's a critical hit, ")[2]+ " and " + self._tmp['RNG'].split("If there's a critical hit, ")[3]
+                    crit_text += "either " + self._tmp['RNG'].split("If there's a critical hit, ")[1] + ", either " + self._tmp['RNG'].split("If there's a critical hit, ")[2]+ ", either " + self._tmp['RNG'].split("If there's a critical hit, ")[3]
                 self._result['RNG'] = crit_text
             else:
                 me_text = "Monster Extract "
@@ -623,7 +604,7 @@ class TotKCookSim():
                 elif part_amount == 2:
                     me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and " + self._tmp['RNG'].split('Monster Extract ')[2]
                 else:
-                    me_text += self._tmp['RNG'].split('Monster Extract ')[1] + ", " + self._tmp['RNG'].split('Monster Extract ')[2] + " and " + self._tmp['RNG'].split('Monster Extract ')[3]
+                    me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and, either " + self._tmp['RNG'].split('Monster Extract ')[2] + ", either " + self._tmp['RNG'].split('Monster Extract ')[3]
                 self._result['RNG'] = me_text
 
         # Item_Cook_C_17
@@ -637,5 +618,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Star Fragment", "Golden Apple", "Silver Lynel Saber Horn", "Hot-Footed Frog", "Monster Extract"])
+    output = meal.cook(["Apple"])
     print(output)
