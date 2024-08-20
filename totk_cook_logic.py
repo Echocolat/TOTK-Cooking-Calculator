@@ -5,40 +5,64 @@ import json
 import math
 import copy
 
+# used multiple times throughout the script (default recipe, clashing effects in elixir, ...)
+FAILURE_RECIPE = {
+                    "ResultActorName": "Item_Cook_O_01",
+                    "PictureBookNum": 145,
+                }
+
+class EmptyMaterialListException(Exception):
+    pass
+
+class InvalidMaterialException(Exception):
+    pass
+
 class TotKCookSim():
 
     def __init__(self):
+
+        """Initialization of the class."""
+
         self._load_data()
 
     def _load_data(self):
+        
+        """Loads all relevant data in dicionaries/lists. It's possible to use modded data."""
 
+        # too lazy to make another language :)
         self.area_lang = 'USen'
 
+        # holds cooking system data
         with open('Data/SystemData.json', 'r', encoding = 'UTF-8') as json_file:
             self.system_data = json.loads(json_file.read())
 
+        # holds non-single recipe data
         with open('Data/RecipeData.json', 'r', encoding = 'UTF-8') as json_file:
             self.recipes = json.loads(json_file.read())
 
+        # holds single recipe data
         with open('Data/SingleRecipeData.json', 'r', encoding = 'UTF-8') as json_file:
             self.recipes_single = json.loads(json_file.read())
 
+        # holds cooking book data
         with open('Data/RecipeCardData.json', 'r', encoding = 'UTF-8') as json_file:
             self.recipe_card_table = json.loads(json_file.read())
 
-
+        # holds material data
         self.material = {}
         with open('Data/MaterialData.json', 'r', encoding = 'UTF-8') as json_file:
             materials = json.loads(json_file.read())
             for item in materials:
                 self.material[item['ActorName']] = item
         
+        # holds effect data
         self.effect = {}
         with open('Data/EffectData.json', 'r', encoding = "UTF-8") as json_file:
             effects = json.loads(json_file.read())
             for item in effects:
                 self.effect[item['EffectType']] = item
 
+        # holds language data
         self._index_material_name = {}
         with open('Data/LanguageData.json', 'r', encoding = 'UTF-8') as json_file:
             self._locale_dict = json.loads(json_file.read())
@@ -52,87 +76,106 @@ class TotKCookSim():
                     self._index_material_name[al] = key.replace('_Name', '')
 
     def cook(self, materials: list):
+
+        """Generates meal data for a given material list."""
+
+        if len(materials) == 0:
+            raise EmptyMaterialListException('Material list is empty')
         self._tmp = {}
         self.output = {}
         self._material(materials)
         self._recipe()
-        self._hitpoint_recover()
         self._effect()
-        self._sell_price()
-        self._super_success_rate()
+        self._hitpoint_recover()
         self._monster_extract()
         self._critical()
         self._spice()
-        self._after_spice()
-        self._special_deal()
-        self._english()
+        self._bonus_and_adjust()
+        self._sell_price()
+        self._super_success_rate()
+        self._special_cases()
+        self._finish()
         return self.output
 
     def _material(self, materials: list):
+
+        """Generates a dictionary of the materials."""
+
         materials_list = []
         for i in materials:
+            if not i in self._index_material_name:
+                raise InvalidMaterialException(f'Invalid material: {i}')
             actor_name = self._index_material_name[i]
             materials_list.append(self.material[actor_name])
         self._tmp['Materials'] = materials_list
         return
     
     def _recipe(self):
-        self._tmp['Recipe'] = {
-            "ResultActorName": "Item_Cook_O_01",
-            "Recipe": "CookEnemy or CookInsect",
-            "PictureBookNum": 145,
-            "SingleRecipeMaterialNum": 1
-        }
+
+        """Finds the recipe associated with the list of materials."""
+
+        # default recipe (e.g. failure recipe)
+        self._tmp['Recipe'] = FAILURE_RECIPE
         materials_list = self._tmp['Materials']
         materials_name_tag = []
+
+        # generate a set of unique object - cooktag pairs
         for material in materials_list:
             actor_name = material['ActorName']
             cook_tag = material['CookTag']
             if (actor_name, cook_tag) not in materials_name_tag:
                 materials_name_tag.append((actor_name, cook_tag))
 
+        # if the size of that set is 1, search in the single recipes
         if len(materials_name_tag) == 1:
             for recipe in self.recipes_single:
+                # make a copy to not lose the original
                 m_copy = copy.copy(materials_name_tag)
-                if recipe['ResultActorName'] == self.system_data['FailActorName']:
-                    self._tmp['Recipe'] = recipe
                 recipe_str = recipe['Recipe']
+                # generate list of OK actors/cooktags
                 parts_list = recipe_str.split(' or ')
 
                 all_ok = False
+                # or_part is a cooktag or a material
                 for or_part in parts_list:
                     material = m_copy[0]
+                    # if it matches, then recipe is ok and we return it
                     if or_part == material[0] or or_part == material[1]:
-                        m_copy.pop(0)
-                        all_ok = True
-                        break
-                if all_ok:
-                    self._tmp['Recipe'] = recipe
-                    return recipe
-        
+                        self._tmp['Recipe'] = recipe
+                        return recipe
+
+        # else, search in normal recipes
         else:
             for recipe in self.recipes:
+                # make a copy to not lose the original
                 m_copy = copy.copy(materials_name_tag)
                 if recipe['ResultActorName'] == self.system_data['FailActorName']:
                     self._tmp['Recipe'] = recipe
                 recipe_str = recipe['Recipe']
+                # generate list of needed parts
                 and_parts = recipe_str.split(' + ')
                 parts_list = [i.split(' or ') for i in and_parts]
+                # if more and_parts than materials in list, go next recipe (impossible to cook this one)
                 if len(parts_list) > len(materials_name_tag):
                     continue
 
                 all_ok = True
+                # and_part is one or more or_part(s) and is absolutely required to be fulfilled
                 for and_part in parts_list:
                     and_ok = False
                     for or_part in and_part:
+                        # or_part is an actor or a cooktag
                         for index in range(len(m_copy)):
                             material = m_copy[index]
+                            # if it matches, then the and_part is ok and we move on
                             if or_part == material[0] or or_part == material[1]:
                                 m_copy.pop(index)
                                 and_ok = True
                                 break
+                        # if and_ok, no need to check more things in the and_part's or_parts and we move on
                         if and_ok:
                             break
+                    # if at the end and_ok is not fulfilled, move on to next recipe
                     if not and_ok:
                         all_ok = False
                         break
@@ -140,74 +183,92 @@ class TotKCookSim():
                     self._tmp['Recipe'] = recipe
                     return recipe
         
+        # if a normal recipe isn't found, game checks if one of the materials have a CookSpice cooktag, and if so, also checks in the single recipes
         if 'CookSpice' in [i[1] for i in materials_name_tag]:
             for recipe in self.recipes_single:
+                # make a copy to not lose the original
                 m_copy = copy.copy(materials_name_tag)
-                if recipe['ResultActorName'] == self.system_data['FailActorName']:
-                    self._tmp['Recipe'] = recipe
                 recipe_str = recipe['Recipe']
+                # generate list of OK actors/cooktags
                 parts_list = recipe_str.split(' or ')
 
                 all_ok = False
+                # or_part is a cooktag or a material
                 for or_part in parts_list:
-                    for index in range(len(m_copy)):
-                        material = m_copy[index]
-                        if or_part == material[0] or or_part == material[1]:
-                            m_copy.pop(index)
-                            all_ok = True
-                            break
-                if all_ok:
-                    self._tmp['Recipe'] = recipe
-                    return recipe
+                    material = m_copy[0]
+                    # if it matches, then recipe is ok and we return it
+                    if or_part == material[0] or or_part == material[1]:
+                        self._tmp['Recipe'] = recipe
+                        return recipe
             
-        return None
-    
-    def _hitpoint_recover(self):
-        materials_list = self._tmp['Materials']
-        recipe = self._tmp['Recipe']
-        hitpoint_recover = 0
-        for material in materials_list:
-            hitpoint_recover += material.get('HitPointRecover', 0)
-        
-        if recipe['ResultActorName'] == self.system_data['FailActorName']:
-            life_recover_rate = self.system_data['SubtleLifeRecoverRate']
-        else:
-            life_recover_rate = self.system_data['LifeRecoverRate']
-        hitpoint_recover = hitpoint_recover * life_recover_rate
-        self._tmp['HitPointRecover'] = hitpoint_recover
-        return
+        # should return the failed meal actor at this point
+        return recipe
 
     def _effect(self):
+
+        """Calculates effect, effect level and effect duration"""
+
         materials_list = self._tmp['Materials']
         recipe = self._tmp['Recipe']
+        # set up flag and values
         set_effect_flag = False
         effect_level = 0
         effect_type = None
         effect_time = 0
         bonus_time = 0
+        bonus_yellow_hearts = 0
+        bonus_stamina = 0
+
         for mat in materials_list:
+            # CookEnemy Spice happens before Monster Extract and Criticals
             if mat.get('CookTag') == "CookEnemy":
+                # each material adds its SpiceBoostEffectiveTime, SpiceBoostMaxHeartLevel, SpiceBoostStaminaLevel if they exist, else 0
+                # SpiceBoostMaxHeartLevel and SpiceBoostStaminaLevel are present for no material in the game
                 bonus_time += mat.get('SpiceBoostEffectiveTime', 0)
+                bonus_yellow_hearts += mat.get('SpiceBoostMaxHeartLevel', 0)
+                bonus_stamina += mat.get('SpiceBoostStaminaLevel', 0)
+
+        # cycle through all existing effects        
         for effect in self.effect:
+            # get amount of materials in the materials list that have the same effect as the one we're cycling through, if > 0, start
+            # doing the effect stuff
             effect_materials_num = len([mat for mat in materials_list if mat.get('CureEffectType', "None") == effect])
             if effect_materials_num > 0:
+                # set_effect_flag is there to prevent a meal from having multiple effects, if that happens, its effect variables are reset
+                # Elixirs are a special case, they turn into a failed meal if they have multiple effects
                 if set_effect_flag:
                     effect_level = 0
                     effect_type = None
                     effect_time = 0
+                    if recipe['ResultActorName'] == 'Item_Cook_C_17':
+                        recipe = FAILURE_RECIPE
+                        self._tmp['Recipe'] = FAILURE_RECIPE
                 else:
                     effect_type = effect
+                # initialize potency sum
                 potency_sum = 0
+                # add bonus time from CookEnemy
                 effect_time += bonus_time
+                # cycle through materials of the list, add 30 sec each time, and if the effect of the material matches, add its potency to sum
                 for mat in materials_list:
                     if mat.get('CureEffectType', "None") == effect:
                         potency_sum += mat.get('CureEffectLevel', 0)
-                    effect_time += mat.get('CureEffectiveTime', 900) / 30
+                    effect_time += 30
+                # add basetime of the effect * amount of materials with this effect
                 effect_time += effect_materials_num * self.effect[effect].get('BaseTime', 0)
+                # effect level = potency * rate, for a compact view of all potency x level equivalents click link below
+                # https://docs.google.com/spreadsheets/d/1I9NZiKmGDmYclYObhAfpnXV4sxLnrC4lYVH67WjeO38/edit?usp=sharing
                 effect_level += self.effect[effect].get('Rate', 0) * potency_sum
+                # add bonus yellow hearts and stamina (no materials have those properties in tears of the kingdom)
+                if effect_type == 'LifeMaxUp':
+                    effect_level += bonus_yellow_hearts
+                elif effect_type in ['StaminaRecovery', 'ExStaminaMaxUp']:
+                    effect_level += bonus_stamina
+                # clamp effect level to the max value of the effect
                 effect_level = min(effect_level, self.effect[effect].get('MaxLv'))
                 set_effect_flag = True
         
+        # fairy tonic hardcoded values
         if recipe['ResultActorName'] == self.system_data['FairyActorName']:
             effect_type = None
             effect_level = 0.0
@@ -216,33 +277,29 @@ class TotKCookSim():
         self._tmp['Effect'] = effect_type
         self._tmp['EffectLevel'] = effect_level
         self._tmp['EffectTime'] = effect_time
+    
+    def _hitpoint_recover(self):
 
-    def _sell_price(self):
-        selling_price = 0
-        materials_list = self._tmp['Materials']
-        for material in materials_list:
-            if material.get('CookLowPrice', False):
-                selling_price += 1
-            else:
-                selling_price += material.get('SellingPrice', 0)
-        for item in self.system_data['PriceRateList']:
-            if item['MaterialNum'] == len(materials_list):
-                self._tmp['SellingPrice'] = math.floor(selling_price * item['Rate'])
-                return 
-        return
+        """Calculates the base amount of health recovery"""
 
-    def _super_success_rate(self):
-        materials_set = set()
-        self._tmp['SuperSuccessRate'] = 0
         materials_list = self._tmp['Materials']
+        recipe = self._tmp['Recipe']
+        # initialize health recovery amount
+        hitpoint_recover = 0
         for material in materials_list:
-            self._tmp['SuperSuccessRate'] = max(self._tmp['SuperSuccessRate'], material.get('SpiceBoostSuccessRate', 0))
-            materials_set.add(material['ActorName'])
+            # each material adds its HitPointRecover value if it exists, 0 otherwise
+            hitpoint_recover += material.get('HitPointRecover', 0)
         
-        for item in self.system_data['SuperSuccessRateList']:
-            if item['MaterialTypeNum'] == len(materials_set):
-                self._tmp['SuperSuccessRate'] += item['Rate']
-                return
+        # if failed meal, rate is 1.0 (in vanilla game), else 2.0 (basically, when cooked (correctly) materials grant twice more HP than not cooked)
+        if recipe['ResultActorName'] == self.system_data['FailActorName']:
+            life_recover_rate = self.system_data['SubtleLifeRecoverRate']
+        else:
+            life_recover_rate = self.system_data['LifeRecoverRate']
+
+        # multiply rate and amount
+        hitpoint_recover = hitpoint_recover * life_recover_rate
+        self._tmp['HitPointRecover'] = hitpoint_recover
+        return
 
     def _monster_extract(self):
         materials_list = self._tmp['Materials']
@@ -388,7 +445,7 @@ class TotKCookSim():
         self._tmp['EffectTime'] = effect_time
         self._tmp['HitPointRecover'] = hitpoint_recover
 
-    def _after_spice(self):
+    def _bonus_and_adjust(self):
         recipe = self._tmp['Recipe']
         effect = self._tmp.get('Effect')
         # bonus time
@@ -439,7 +496,34 @@ class TotKCookSim():
                 self._tmp['EffectLevel'] = 4 if self._tmp['EffectLevel'] <= 4.0 and self._tmp['EffectLevel'] > 0 else self._tmp['EffectLevel']
             self._tmp['EffectLevel'] = math.floor(self._tmp['EffectLevel'])
 
-    def _special_deal(self):
+    def _sell_price(self):
+        selling_price = 0
+        materials_list = self._tmp['Materials']
+        for material in materials_list:
+            if material.get('CookLowPrice', False):
+                selling_price += 1
+            else:
+                selling_price += material.get('SellingPrice', 0)
+        for item in self.system_data['PriceRateList']:
+            if item['MaterialNum'] == len(materials_list):
+                self._tmp['SellingPrice'] = math.floor(selling_price * item['Rate'])
+                return 
+        return
+
+    def _super_success_rate(self):
+        materials_set = set()
+        self._tmp['SuperSuccessRate'] = 0
+        materials_list = self._tmp['Materials']
+        for material in materials_list:
+            self._tmp['SuperSuccessRate'] = max(self._tmp['SuperSuccessRate'], material.get('SpiceBoostSuccessRate', 0))
+            materials_set.add(material['ActorName'])
+        
+        for item in self.system_data['SuperSuccessRateList']:
+            if item['MaterialTypeNum'] == len(materials_set):
+                self._tmp['SuperSuccessRate'] += item['Rate']
+                return
+
+    def _special_cases(self):
         self._tmp['RNG'] = ''
 
         # special deal
@@ -459,7 +543,7 @@ class TotKCookSim():
         elif recipe['ResultActorName'] == self.system_data['FairyActorName']:
             self._tmp['SellingPrice'] = 2
 
-    def _english(self):
+    def _finish(self):
         result_actor_name = self._tmp['Recipe']['ResultActorName']
         effect = self._tmp.get('Effect')
         locale_actor_name = self._locale_dict['Meal'][f'{result_actor_name}_Name'][self.area_lang]
@@ -643,5 +727,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Hearty Truffle"])
+    output = meal.cook(["Apple"])
     print(output)

@@ -1,7 +1,7 @@
 import traceback
 import customtkinter as ctk
 import tkinter as tk
-from totk_cook_logic import TotKCookSim
+from totk_cook_logic import TotKCookSim, InvalidMaterialException, EmptyMaterialListException
 from PIL import Image
 
 # credits
@@ -91,23 +91,22 @@ class App(ctk.CTk):
         # cooks the inputted materials when the Cook button is pressed
         result_txt = ""
         try:
-            materials = self.entryframe.get()
             # gets the materials list
-            if len(materials) == 0:
-                # refuse cooking if no materials
-                result_txt = "No material selected."
+            materials = self.entryframe.get()
+            # get cooking result
+            result = sim.cook(materials)
+            # formatting
+            for k, v in result.items():
+                result_txt += f'{k}: {v}\n'
                 self.outputframe.output_text.delete('1.0', tk.END)
                 self.outputframe.output_text.insert('1.0', result_txt)
-            else:
-                # get cooking result
-                result = sim.cook(materials)
-                # formatting
-                for k, v in result.items():
-                    result_txt += f'{k}: {v}\n'
-                    self.outputframe.output_text.delete('1.0', tk.END)
-                    self.outputframe.output_text.insert('1.0', result_txt)
-        except KeyError:
-            # means one of the materials have an invalid name, likely
+        except EmptyMaterialListException:
+            # means the list is empty
+            traceback.print_exc()
+            self.outputframe.output_text.delete('1.0', tk.END)
+            self.outputframe.output_text.insert('1.0', 'Material list is empty.')
+        except InvalidMaterialException:
+            # means one of the materials have an invalid name
             traceback.print_exc()
             self.outputframe.output_text.delete('1.0', tk.END)
             self.outputframe.output_text.insert('1.0', 'Invalid material detected.')
