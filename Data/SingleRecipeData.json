@@ -1,0 +1,150 @@
+[
+    {
+        "ResultActorName": "Item_Cook_C_16",
+        "Recipe": "Animal_Insect_F",
+        "Icon": "assets/icon/Item_Cook_C_16.png",
+        "PictureBookNum": 228,
+        "BonusHeart": -12,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_O_02",
+        "Recipe": "CookOre",
+        "Icon": "assets/icon/Item_Cook_O_02.png",
+        "PictureBookNum": 146,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_B_21",
+        "Recipe": "Item_Fruit_I",
+        "Icon": "assets/icon/Item_Cook_B_21.png",
+        "PictureBookNum": 14,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_A_10",
+        "Recipe": "Item_Material_04",
+        "Icon": "assets/icon/Item_Cook_A_10.png",
+        "PictureBookNum": 112,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_B_06",
+        "Recipe": "CookMeat",
+        "Icon": "assets/icon/Item_Cook_B_06.png",
+        "PictureBookNum": 4,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_B_23",
+        "Recipe": "Item_FishGet_M or Item_InsectGet_K or Item_InsectGet_O or Item_InsectGet_Z",
+        "Icon": "assets/icon/Item_Cook_B_23.png",
+        "PictureBookNum": 6,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_B_05",
+        "Recipe": "CookFish",
+        "Icon": "assets/icon/Item_Cook_B_05.png",
+        "PictureBookNum": 5,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_A_01",
+        "Recipe": "CookMushroom",
+        "Icon": "assets/icon/Item_Cook_A_01.png",
+        "PictureBookNum": 1,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_I_16",
+        "Recipe": "BeeHome",
+        "Icon": "assets/icon/Item_Cook_I_16.png",
+        "PictureBookNum": 119,
+        "BonusHeart": -8,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_B_22",
+        "Recipe": "Item_Fruit_K or Item_Fruit_L",
+        "Icon": "assets/icon/Item_Cook_B_22.png",
+        "PictureBookNum": 15,
+        "BonusHeart": -2,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_K_09",
+        "Recipe": "Item_Material_05",
+        "Icon": "assets/icon/Item_Cook_K_09.png",
+        "PictureBookNum": 133,
+        "BonusHeart": 2,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_Q_06",
+        "Recipe": "Item_PlantGet_S",
+        "Icon": "assets/icon/Item_Cook_Q_06.png",
+        "PictureBookNum": 18,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_B_01",
+        "Recipe": "CookPlant",
+        "Icon": "assets/icon/Item_Cook_B_01.png",
+        "PictureBookNum": 16,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_Q_01",
+        "Recipe": "Item_Fruit_M",
+        "Icon": "assets/icon/Item_Cook_Q_01.png",
+        "PictureBookNum": 49,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_B_02",
+        "Recipe": "CookFruit",
+        "Icon": "assets/icon/Item_Cook_B_02.png",
+        "PictureBookNum": 47,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_O_01",
+        "Recipe": "CookForeign",
+        "Icon": "assets/icon/Item_Cook_O_01.png",
+        "PictureBookNum": 145,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_O_01",
+        "Recipe": "CookGolem",
+        "Icon": "assets/icon/Item_Cook_O_01.png",
+        "PictureBookNum": 145,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    },
+    {
+        "ResultActorName": "Item_Cook_O_01",
+        "Recipe": "CookEnemy or CookInsect",
+        "Icon": "assets/icon/Item_Cook_O_01.png",
+        "PictureBookNum": 145,
+        "SingleRecipeMaterialNum": 1,
+        "IsSingleRecipe": true
+    }
+]

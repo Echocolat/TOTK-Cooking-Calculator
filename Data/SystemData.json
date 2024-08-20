@@ -1,0 +1,24 @@
+{
+  "EnemyExtractActorName": "Item_Material_08",
+  "FailActorName": "Item_Cook_O_01",
+  "FailLifeRecover": 1,
+  "FairyActorName": "Item_Cook_C_16",
+  "LifeRecoverRate": 2.0,
+  "PriceRateList": [
+      { "MaterialNum": 1, "Rate": 1.2 },
+      { "MaterialNum": 2, "Rate": 1.3 },
+      { "MaterialNum": 3, "Rate": 1.4 },
+      { "MaterialNum": 4, "Rate": 1.6 },
+      { "MaterialNum": 5, "Rate": 1.8 }
+  ],
+  "SubtleLifeRecover": 4.0,
+  "SubtleLifeRecoverRate": 1.0,
+  "SuperSuccessAddEffectiveTime": 300,
+  "SuperSuccessRateList": [
+      { "MaterialTypeNum": 1, "Rate": 5.0 },
+      { "MaterialTypeNum": 2, "Rate": 10.0 },
+      { "MaterialTypeNum": 3, "Rate": 15.0 },
+      { "MaterialTypeNum": 4, "Rate": 20.0 },
+      { "MaterialTypeNum": 5, "Rate": 25.0 }
+  ]
+}
