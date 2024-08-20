@@ -660,24 +660,32 @@ class TotKCookSim():
         result_actor_name = self._tmp['Recipe']['ResultActorName']
         effect = self._tmp.get('Effect')
         
+        # gets base meal name
         locale_actor_name = self._locale_dict['Meal'][f'{result_actor_name}_Name'][self.area_lang]
         
-        # name
         locale_effect_name = ''
         locale_buff_name = ''
+
         if effect:
+            # gets effect prefix
             locale_effect_name = self._locale_dict['Effect'][effect+'_Name'][self.area_lang]
+            # gets effect name
             locale_buff_name = self._locale_dict['Buff'][effect][self.area_lang]
+            # full meal name
             locale_meal_name = locale_effect_name + ' ' + locale_actor_name
         else:
             locale_meal_name = locale_actor_name
         if not locale_buff_name:
             locale_buff_name = "None"
 
-        # effect time
+        # effect time formatting
+
+        # gets crit time "+3:00" string
         crit_time_min, crit_time_sec = divmod(self.system_data['SuperSuccessAddEffectiveTime'], 60)
         crit_time_string = "{:02d}:{:02d}".format(int(crit_time_min), int(crit_time_sec))
+
         if self._monster_extract_time_flag:
+            # if monster extract affects time, generate string for all three times
             minutes0, seconds0 = divmod(self._tmp['Monster Extract']['EffectTime'][0], 60)
             minutes1, seconds1 = divmod(self._tmp['Monster Extract']['EffectTime'][1], 60)
             minutes2, seconds2 = divmod(self._tmp['Monster Extract']['EffectTime'][2], 60)
@@ -685,16 +693,18 @@ class TotKCookSim():
             effect_time_str1 = "{:02d}:{:02d}".format(int(minutes1), int(seconds1))
             effect_time_str2 = "{:02d}:{:02d}".format(int(minutes2), int(seconds2))
             self._tmp['RNG'] += f"Monster Extract sets time to {effect_time_str0}, {effect_time_str1} or {effect_time_str2} (each 33.3%)"
+
         elif self._critical_only_time_flag or self._critical_health_time_flag or self._critical_health_level_time_flag:
-            minutes0, seconds0 = divmod(self._tmp['Critical']['EffectTime'][0], 60)
-            minutes1, seconds1 = divmod(self._tmp['Critical']['EffectTime'][1], 60)
-            effect_time_str0 = "{:02d}:{:02d}".format(int(minutes0), int(seconds0))
-            effect_time_str1 = "{:02d}:{:02d}".format(int(minutes1), int(seconds1))
+            # if time critical, generate string for the time addition
             self._tmp['RNG'] += f"If there's a critical hit, duration gets a {crit_time_string} increase"
+
+        # non-RNG effect time
         minutes, seconds = divmod(self._tmp['EffectTime'], 60)
         effect_time_str = "{:02d}:{:02d}".format(int(minutes), int(seconds))
 
-        # hearts
+        # heart recovery formatting
+
+        # unsure about its use anymore
         quarter_heart_map = {
             0: '',
             1: '¼',
@@ -703,33 +713,43 @@ class TotKCookSim():
         }
 
         if self._monster_extract_only_health_random_flag or self._monster_extract_health_level_random_flag:
+            # if monster extract affects health, generate string for both bad and good case
             whole_heart0, quarter_heart0 = divmod(self._tmp['Monster Extract']['HitPointRecover'][0], 4)
             whole_heart0, quarter_heart0 = int(whole_heart0), int(quarter_heart0)
-            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][0] == self.effect['LifeRecover'].get('MaxLv'):
-                heart_str0 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
+            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][0] == 120.0:
+                heart_str0 = '♥ Full Recovery'
             else:
                 heart_str0 = '♥' * whole_heart0
                 if quarter_heart0:
                     heart_str0 += quarter_heart_map[quarter_heart0]+'♥'
             heart_str0 = "None" if heart_str0 == "" else heart_str0
             if self._monster_extract_only_health_random_flag or self._monster_extract_health_level_random_flag:
+                # covers both cases of getting or not full health 
                 if self._tmp['HitPointRecover'] + int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4) >= 120:
                     self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either adds Full Recovery"
                 else:
                     self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
+
         elif self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag:
-            if self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
-                if self._tmp['HitPointRecover'] + self.effect['LifeRecover'].get('SuperSuccessAddVolume') >= 120:
-                    self._tmp['RNG'] += f"If there's a critical hit, adds Full Recovery"
-                else:
-                    self._tmp['RNG'] += f"If there's a critical hit, adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
+            # if critical effects health, generate string for health addition
+            # covers both cases of getting or not full health
+            if self._tmp['HitPointRecover'] + self.effect['LifeRecover'].get('SuperSuccessAddVolume') >= 120:
+                self._tmp['RNG'] += f"If there's a critical hit, adds Full Recovery"
+            else:
+                self._tmp['RNG'] += f"If there's a critical hit, adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
+
+        # calculate heart amount        
         heart_amount = round(self._tmp['HitPointRecover'] / 4, 2)
+        # remove unnecessary digits
         if heart_amount.is_integer():
             heart_amount = int(heart_amount)
         elif (heart_amount * 2).is_integer():
             heart_amount = round(heart_amount, 1) 
+    
+        # if Extra Hearts or Full Recovery, generate string for Full Recovery
         if effect == 'LifeMaxUp' or self._tmp['HitPointRecover'] == self.effect['LifeRecover'].get('MaxLv'):
-            heart_str = self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
+            heart_str = "Full Recovery"
+        # if no recovery, generate None string
         elif heart_amount == 0:
             heart_str = "None"
         elif heart_amount < 2:
@@ -737,7 +757,7 @@ class TotKCookSim():
         else:
             heart_str = str(heart_amount) + " Hearts"
 
-        # level
+        # effect level formatting
 
         if effect == "LifeMaxUp":
             if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
@@ -854,5 +874,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Acorn", "Acorn", "Acorn", "Acorn", "Acorn"])
+    output = meal.cook(["Apple"])
     print(output)
