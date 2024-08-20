@@ -6,7 +6,7 @@ This is a Cooking simulator for _The Legend of Zelda: Tears of the Kingdom_. The
 
 #### How do I use it pleeeeease
 
-Make sure you have the `customtkinter`, `PIL` and `tkinter` packages installed, then run `TotKCookSimulatorV1.py`.
+Run `pip install -r requirements.txt`, then run `TotKCookSimulatorV2.py`.
 
 #### Credits
 

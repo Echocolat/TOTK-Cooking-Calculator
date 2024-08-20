@@ -415,46 +415,56 @@ class TotKCookSim():
                 self._critical_only_level_flag = True
                 self._tmp['Critical']['EffectLevel'] = [effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
             elif effect in ['StaminaRecover', 'ExStaminaMaxUp']:
-                # if the effect of the meal is stamina-related
+                # if the effect of the meal is stamina-related, the game checks whether or not the meal is already maxed out in terms of effect level
                 if effect_level >= self.effect[effect].get('MaxLv'):
-                    # health crit
+                    # if it is, the meal gets a health crit
                     self._critical_only_health_flag = True
                     self._tmp['Critical']['HitPointRecover'] = [hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
                 else:
-                    # health or level crit
+                    # if it's not, the meal either gets a health crit, or a level crit (effect's SSAV added to it)
                     self._critical_health_level_flag = True
                     self._tmp['Critical']['HitPointRecover'] = [hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
                     self._tmp['Critical']['EffectLevel'] = [effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
             elif effect_level >= self.effect[effect].get('MaxLv'):
+                # if the meal is maxed out in terms of effect level, the game checks if it's maxed out in terms of health recovery (e.g. >= 40 hearts)
+                # honorable mention to LifeRepair (Gloom Recovery) that can get time crit despite being a non-timed effect because devs forgot to add
+                # a special case for it
                 if hitpoint_recover >= self.effect['LifeRecover'].get('MaxLv'):
-                    # time crit
+                    # if it is, get a time critical, which adds 300 seconds to the meal effect duration (+5:00)
                     self._critical_only_time_flag = True
                     self._tmp['Critical']['EffectTime'] = [effect_time, effect_time + self.system_data.get('SuperSuccessAddEffectiveTime')]
                 else:
-                    # health or time crit
+                    # if it's not, get either a time critical or a health critical
                     self._critical_health_time_flag = True
                     self._tmp['Critical']['HitPointRecover'] = [hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
                     self._tmp['Critical']['EffectTime'] = [effect_time, effect_time + self.system_data.get('SuperSuccessAddEffectiveTime')]
             elif hitpoint_recover >= self.effect['LifeRecover'].get('MaxLv'):
-                # health or level crit
+                # if the meal is maxed out in terms of health, get either a health critical or an effect level critical
+                # I have no clue why a health critical can be rolled if health is already maxed out, but whatever
                 self._critical_health_level_flag = True
                 self._tmp['Critical']['HitPointRecover'] = [hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
                 self._tmp['Critical']['EffectLevel'] = [effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
             else:
-                # health or level or time crit
+                # if none of the cases above is met, roll between all three criticals
                 self._critical_health_level_time_flag = True
                 self._tmp['Critical']['HitPointRecover'] = [hitpoint_recover, hitpoint_recover + self.effect['LifeRecover'].get('SuperSuccessAddVolume')]
                 self._tmp['Critical']['EffectLevel'] = [effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
                 self._tmp['Critical']['EffectTime'] = [effect_time, effect_time + self.system_data.get('SuperSuccessAddEffectiveTime')]
 
     def _spice(self):
-        if self._tmp['Recipe']['ResultActorName'] == self.system_data['FailActorName']:
+
+        """Adds eventual SpiceBoost to the meal properties"""
+
+        # spice doesn't apply to dubious food or rock hard food
+        if self._tmp['Recipe']['ResultActorName'] in [self.system_data['FailActorName'], 'Item_Cook_O_02']:
             return
+        
         effect = self._tmp['Effect']
         materials_list = self._tmp['Materials']
         effect_level = self._tmp['EffectLevel']
         effect_time = self._tmp['EffectTime']
         hitpoint_recover = self._tmp['HitPointRecover']
+
         for material in materials_list:
             if material.get('CookTag') != "CookEnemy":
                 # health spice
@@ -720,7 +730,7 @@ class TotKCookSim():
                 self._tmp['RNG'] += f'Monster Extract sets meal effect to {int(self._tmp['Monster Extract']['EffectLevel'][0] / 4)} Ungloomed Heart, either adds {int((self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]) / 4)} Ungloomed Heart to the meal effect'
             elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
                 self._tmp['RNG'] += f"If there's a critical hit, adds {int((self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]) / 4)} Ungloomed Heart to the meal effect"
-            level_str = str(int(self._tmp['EffectLevel'] / 4)) + " Unloomed Hearts"
+            level_str = str(int(self._tmp['EffectLevel'] / 4)) + " Ungloomed Hearts"
             effect_time_str = "None"
         else:
             if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
@@ -749,11 +759,11 @@ class TotKCookSim():
         # result
 
         self._result = {
-            'Meal name': locale_meal_name,
+            'Meal name': f'{locale_meal_name} ({self._tmp['Recipe']['ResultActorName']})',
             'Actor name': self._tmp['Recipe']['ResultActorName'],
             'Recipe number': self._tmp['Recipe']['PictureBookNum'],
             'Health recovery': heart_str,
-            'Effect': locale_buff_name,
+            'Effect': f'{locale_buff_name} ({effect if effect != None else ""})'.replace(' ()', ''),
             'Effect duration': effect_time_str,
             'Effect level': level_str,
             'Critical rate': str(min(self._tmp['SuperSuccessRate'], 100)) + "%",
@@ -761,7 +771,7 @@ class TotKCookSim():
             'Description': local_meal_desc.replace('\n', ' '),
         }
 
-        if self._result['Effect'] == "None":
+        if self._result['Effect'] == None or self._result['Effect'] == "None":
             self._result['Effect duration'] = "None"
             self._result['Effect level'] = "None"
 
@@ -801,11 +811,13 @@ class TotKCookSim():
             self._result['Actor name'] += '_' + self._tmp['Effect']
             self._result['Recipe number'] = self.recipe_card_table.index(self._result['Actor name']) + 1
 
+        del self._result['Actor name']
+
         self.output = {}
         for k, v in self._result.items():
             self.output[k] = v
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Apple"])
+    output = meal.cook(["Ruby"])
     print(output)
