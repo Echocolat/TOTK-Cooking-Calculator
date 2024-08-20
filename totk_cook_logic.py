@@ -608,20 +608,30 @@ class TotKCookSim():
         for item in self.system_data['PriceRateList']:
             if item['MaterialNum'] == len(materials_list):
                 self._tmp['SellingPrice'] = math.floor(selling_price * item['Rate'])
-            self._tmp['SellingPrice'] = max(self._tmp['SellingPrice'], 3)
-            if self._tmp['Recipe']['ResultActorName'] == self.system_data['FairyActorName']:
-                self._tmp['SellingPrice'] = 2
+            # can't be lower than 2, unless fairy tonic, rock hard meal or dubious food
+
+        self._tmp['SellingPrice'] = max(self._tmp['SellingPrice'], 3)
+        if self._tmp['Recipe']['ResultActorName'] in ['Item_Cook_O_02', self.system_data['SubtleLifeRecover'], self.system_data['FairyActorName']]:
+            self._tmp['SellingPrice'] = 2
 
         return
 
     def _super_success_rate(self):
+
+        """Calculates the chances of critical hit"""
+
         materials_set = set()
         self._tmp['SuperSuccessRate'] = 0
         materials_list = self._tmp['Materials']
+
+        # cycle through all materials in the list
         for material in materials_list:
+            # take max of SpiceBoostSuccessRate
             self._tmp['SuperSuccessRate'] = max(self._tmp['SuperSuccessRate'], material.get('SpiceBoostSuccessRate', 0))
+            # also calculating amount of unique materials
             materials_set.add(material['ActorName'])
         
+        # add max of SpiceBoostSuccessRate and the Rate defined by unique material amount
         for item in self.system_data['SuperSuccessRateList']:
             if item['MaterialTypeNum'] == len(materials_set):
                 self._tmp['SuperSuccessRate'] += item['Rate']
@@ -629,7 +639,9 @@ class TotKCookSim():
 
     def _special_cases(self):
 
-        # special deal
+        """Ensures default properties for failed meals"""
+
+        # dubious food restores 1 heart, rock hard food restores 1/4 heart, both have no effect
         recipe = self._tmp['Recipe']
         if recipe['ResultActorName'] in ['Item_Cook_O_02', self.system_data['SubtleLifeRecover']]:
             if recipe['ResultActorName'] == "Item_Cook_O_02":
@@ -639,12 +651,15 @@ class TotKCookSim():
             self._tmp['Effect'] = None
             self._tmp['EffectTime'] = 0
             self._tmp['EffectLevel'] = 0
-            self._tmp['SellingPrice'] = 2
 
     def _finish(self):
+
+        """Handles formatting the data for output"""
+
         self._tmp['RNG'] = ''
         result_actor_name = self._tmp['Recipe']['ResultActorName']
         effect = self._tmp.get('Effect')
+        
         locale_actor_name = self._locale_dict['Meal'][f'{result_actor_name}_Name'][self.area_lang]
         
         # name
@@ -690,54 +705,24 @@ class TotKCookSim():
         if self._monster_extract_only_health_random_flag or self._monster_extract_health_level_random_flag:
             whole_heart0, quarter_heart0 = divmod(self._tmp['Monster Extract']['HitPointRecover'][0], 4)
             whole_heart0, quarter_heart0 = int(whole_heart0), int(quarter_heart0)
-            whole_heart1, quarter_heart1 = divmod(self._tmp['Monster Extract']['HitPointRecover'][1], 4)
-            whole_heart1, quarter_heart1 = int(whole_heart1), int(quarter_heart1)
-            whole_heart2, quarter_heart2 = divmod(self._tmp['Monster Extract']['HitPointRecover'][2], 4)
-            whole_heart2, quarter_heart2 = int(whole_heart2), int(quarter_heart2)
             if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][0] == self.effect['LifeRecover'].get('MaxLv'):
                 heart_str0 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
             else:
                 heart_str0 = '♥' * whole_heart0
                 if quarter_heart0:
                     heart_str0 += quarter_heart_map[quarter_heart0]+'♥'
-            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][1] == self.effect['LifeRecover'].get('MaxLv'):
-                heart_str1 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
-            else:
-                heart_str1 = '♥' * whole_heart1
-                if quarter_heart1:
-                    heart_str1 += quarter_heart_map[quarter_heart1]+'♥'
-            if effect == 'LifeMaxUp' or self._tmp['Monster Extract']['HitPointRecover'][2] == self.effect['LifeRecover'].get('MaxLv'):
-                heart_str2 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
-            else:
-                heart_str2 = '♥' * whole_heart2
-                if quarter_heart2:
-                    heart_str2 += quarter_heart_map[quarter_heart2]+'♥'
             heart_str0 = "None" if heart_str0 == "" else heart_str0
-            heart_str1 = "None" if heart_str1 == "" else heart_str1
-            heart_str2 = "None" if heart_str2 == "" else heart_str2
             if self._monster_extract_only_health_random_flag or self._monster_extract_health_level_random_flag:
-                self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
+                if self._tmp['HitPointRecover'] + int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4) >= 120:
+                    self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either adds Full Recovery"
+                else:
+                    self._tmp['RNG'] += f"Monster Extract sets health recovery to {heart_str0}, either adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
         elif self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag or self._critical_health_time_flag:
-            whole_heart0, quarter_heart0 = divmod(self._tmp['Critical']['HitPointRecover'][0], 4)
-            whole_heart0, quarter_heart0 = int(whole_heart0), int(quarter_heart0)
-            whole_heart1, quarter_heart1 = divmod(self._tmp['Critical']['HitPointRecover'][1], 4)
-            whole_heart1, quarter_heart1 = int(whole_heart1), int(quarter_heart1)
-            if effect == 'LifeMaxUp' or self._tmp['Critical']['HitPointRecover'][0] == self.effect['LifeRecover'].get('MaxLv'):
-                heart_str0 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
-            else:
-                heart_str0 = '♥' * whole_heart0
-                if quarter_heart0:
-                    heart_str0 += quarter_heart_map[quarter_heart0]+'♥'
-            if effect == 'LifeMaxUp' or self._tmp['Critical']['HitPointRecover'][1] == self.effect['LifeRecover'].get('MaxLv'):
-                heart_str1 = '♥'+self._locale_dict['App']['FullRecovery_Name'][self.area_lang]
-            else:
-                heart_str1 = '♥' * whole_heart1
-                if quarter_heart1:
-                    heart_str1 += quarter_heart_map[quarter_heart1]+'♥'
-            heart_str0 = "None" if heart_str0 == "" else heart_str0
-            heart_str1 = "None" if heart_str1 == "" else heart_str1
             if self._critical_only_health_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
-                self._tmp['RNG'] += f"If there's a critical hit, adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
+                if self._tmp['HitPointRecover'] + self.effect['LifeRecover'].get('SuperSuccessAddVolume') >= 120:
+                    self._tmp['RNG'] += f"If there's a critical hit, adds Full Recovery"
+                else:
+                    self._tmp['RNG'] += f"If there's a critical hit, adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
         heart_amount = round(self._tmp['HitPointRecover'] / 4, 2)
         if heart_amount.is_integer():
             heart_amount = int(heart_amount)
