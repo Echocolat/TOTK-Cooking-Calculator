@@ -269,7 +269,7 @@ class TotKCookSim():
                 set_effect_flag = True
         
         # fairy tonic hardcoded values
-        if recipe['ResultActorName'] == self.system_data['FairyActorName']:
+        if recipe['ResultActorName'] in [self.system_data['FairyActorName'], self.system_data['FailActorName'], "Item_Cook_O_02"]:
             effect_type = None
             effect_level = 0.0
             effect_time = 0
