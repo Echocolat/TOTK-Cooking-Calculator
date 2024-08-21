@@ -352,7 +352,7 @@ class TotKCookSim():
                 # at random (50/50) (SSAV = SuperSuccessAddVolume, a property of each effect)
                 self._monster_extract_only_level_flag = True
                 self._tmp['Monster Extract']['EffectLevel'] = [self.effect[effect].get('MinLv'), effect_level, effect_level + self.effect[effect].get('SuperSuccessAddVolume')]
-            elif (hitpoint_recover == 0 and effect != None):
+            elif (hitpoint_recover == 0 and effect == None):
                 # if the meal is not regenerative and has no effect, add SSAV of LifeRecover (e.g. 12) to health recovery
                 # unsure if this can happen at any point
                 self._monster_extract_only_health_up_flag = True
