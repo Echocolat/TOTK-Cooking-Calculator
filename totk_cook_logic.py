@@ -760,6 +760,7 @@ class TotKCookSim():
         # effect level formatting
 
         if effect == "LifeMaxUp":
+            # needs specific string format for "Extra Heart(s)"
             if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
                 self._tmp['RNG'] += f"Monster Extract sets meal effect to {int(self._tmp['Monster Extract']['EffectLevel'][0] / 4)} Extra Heart, either adds {int((self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]) / 4)} Extra Heart to the meal effect'"
             elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
@@ -767,6 +768,7 @@ class TotKCookSim():
             level_str = str(int(self._tmp['EffectLevel'] / 4)) + " Extra Heart(s)"
             effect_time_str = "None"
         elif effect == "StaminaRecover":
+            # needs specific string format for "Stamina Segment(s)"
             if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
                 self._tmp['RNG'] += f"Monster Extract sets meal effect to {self._tmp['Monster Extract']['EffectLevel'][0]} Stamina Segment, either adds {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]} Stamina Segments to the meal effect"
             elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
@@ -774,6 +776,7 @@ class TotKCookSim():
             level_str = str(int(self._tmp['EffectLevel'])) + " Stamina Segment(s)"
             effect_time_str = "None"
         elif effect == "ExStaminaMaxUp":
+            # needs specific string format for "Extra Stamina Segment(s)"
             if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
                 self._tmp['RNG'] += f"Monster Extract sets meal effect to {self._tmp['Monster Extract']['EffectLevel'][0]} Extra Stamina Segment, either adds {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]} Extra Stamina Segments to the meal effect"
             elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
@@ -781,6 +784,7 @@ class TotKCookSim():
             level_str = str(int(self._tmp['EffectLevel'])) + " Extra Stamina Segment(s)"
             effect_time_str = "None"
         elif effect == "LifeRepair":
+            # needs specific string format for "Ungloomed Heart(s)"
             if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
                 self._tmp['RNG'] += f"Monster Extract sets meal effect to {int(self._tmp['Monster Extract']['EffectLevel'][0] / 4)} Ungloomed Heart, either adds {int((self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]) / 4)} Ungloomed Heart to the meal effect"
             elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
@@ -788,18 +792,21 @@ class TotKCookSim():
             level_str = str(int(self._tmp['EffectLevel'] / 4)) + " Ungloomed Hearts"
             effect_time_str = "None"
         else:
+            # regular level string format
             if self._monster_extract_only_level_flag or self._monster_extract_health_level_random_flag:
                 self._tmp['RNG'] += f"Monster Extract sets effect level to {self._tmp['Monster Extract']['EffectLevel'][0]}, either adds {self._tmp['Monster Extract']['EffectLevel'][2] - self._tmp['Monster Extract']['EffectLevel'][1]} level(s) to the effect"
             elif self._critical_only_level_flag or self._critical_health_level_flag or self._critical_health_level_time_flag:
                 self._tmp['RNG'] += f"If there's a critical hit, adds {self._tmp['Critical']['EffectLevel'][1] - self._tmp['Critical']['EffectLevel'][0]} level(s) to the effect"
             level_str = str(self._tmp['EffectLevel'])
 
-        # desc
+        # description
 
         locale_actor_caption = self._locale_dict['Meal'][f'{result_actor_name}_Caption'][self.area_lang]
         locale_effect_desc = ''
+
         if effect:
             effect_desc_key = effect
+            # handle elixir description
             if result_actor_name == 'Item_Cook_C_17':
                 effect_desc_key += '_MedicineDesc'
             else:
@@ -813,6 +820,7 @@ class TotKCookSim():
         
         # result
 
+        # almost final dict
         self._result = {
             'Meal name': f"{locale_meal_name} ({self._tmp['Recipe']['ResultActorName']})",
             'Actor name': self._tmp['Recipe']['ResultActorName'],
@@ -826,48 +834,58 @@ class TotKCookSim():
             'Description': local_meal_desc.replace('\n', ' '),
         }
 
+        # make sure None duration and None level if None effect
         if self._result['Effect'] == None or self._result['Effect'] == "None":
             self._result['Effect duration'] = "None"
             self._result['Effect level'] = "None"
 
         if self._tmp['RNG']:
+            # handles critical final string
             if "If there's a critical hit, " in self._tmp['RNG']:
                 crit_text = "If there's a critical hit, "
                 part_amount = self._tmp['RNG'].count("If there's a critical hit, ")
+                # if only one critical possibility
                 if part_amount == 1:
                     crit_text += self._tmp['RNG'].split("If there's a critical hit, ")[1]
+                # if two critical possibilities
                 elif part_amount == 2:
                     crit_text += "either " + self._tmp['RNG'].split("If there's a critical hit, ")[1] + ", either " + self._tmp['RNG'].split("If there's a critical hit, ")[2]
+                # if all three critical possibilities
                 else:
                     crit_text += "either " + self._tmp['RNG'].split("If there's a critical hit, ")[1] + ", either " + self._tmp['RNG'].split("If there's a critical hit, ")[2]+ ", either " + self._tmp['RNG'].split("If there's a critical hit, ")[3]
                 self._result['RNG'] = crit_text
+
+            # handles monster extract final string
             else:
                 me_text = "Monster Extract "
+                # need to separate cases for monster extract time or not because of the "and" it implies
                 if self._monster_extract_time_flag:
                     part_amount = self._tmp['RNG'].count("Monster Extract ")
+                    # if only one monster extract non-time change
                     if part_amount == 1:
                         me_text += self._tmp['RNG'].split('Monster Extract ')[1]
-                    elif part_amount == 2:
-                        me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and, either " + self._tmp['RNG'].split('Monster Extract ')[2]
+                    # if all two monster extract non-time changes
                     else:
-                        me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and, either " + self._tmp['RNG'].split('Monster Extract ')[2] + ", either " + self._tmp['RNG'].split('Monster Extract ')[3]
+                        me_text += self._tmp['RNG'].split('Monster Extract ')[1] + " and, either " + self._tmp['RNG'].split('Monster Extract ')[2]
                 else:
                     part_amount = self._tmp['RNG'].count("Monster Extract ")
+                    # if only one monster extract non-time change
                     if part_amount == 1:
                         me_text += "either " + self._tmp['RNG'].split('Monster Extract ')[1]
-                    elif part_amount == 2:
-                        me_text += "either " + self._tmp['RNG'].split('Monster Extract ')[1] + ", either " + self._tmp['RNG'].split('Monster Extract ')[2]
+                    # if all two monster extract non-time changes
                     else:
-                        me_text += "either " + self._tmp['RNG'].split('Monster Extract ')[1] + ", either " + self._tmp['RNG'].split('Monster Extract ')[2] + ", either " + self._tmp['RNG'].split('Monster Extract ')[3]
+                        me_text += "either " + self._tmp['RNG'].split('Monster Extract ')[1] + ", either " + self._tmp['RNG'].split('Monster Extract ')[2]
                 self._result['RNG'] = me_text
 
-        # Item_Cook_C_17
+        # Elixir actor name and cooking book data
         if result_actor_name == 'Item_Cook_C_17':
             self._result['Actor name'] += '_' + self._tmp['Effect']
             self._result['Recipe number'] = self.recipe_card_table.index(self._result['Actor name']) + 1
 
+        # useless now since in meal name
         del self._result['Actor name']
 
+        # generate final dictionary with the output of the cooking algorithm
         self.output = {}
         for k, v in self._result.items():
             self.output[k] = v
