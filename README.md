@@ -6,11 +6,16 @@ This is a Cooking simulator for _The Legend of Zelda: Tears of the Kingdom_. The
 
 #### How do I use it pleeeeease
 
-Run `pip install -r requirements.txt`, then run `TotKCookSimulatorV2.py`.
+Select up to 5 materials and press the Cook button.
+
+#### "this is wrong, I don't get the same thing in game!!!!"
+
+Please report the issue either on the Issues (on Github) or in my Discord DMs (my username is echocolat)
 
 #### Credits
 
 - Original code by KingFoo (see their [original repo](https://github.com/KingFooZQ/Totk-Cooking-Simulator))
 - CookingMgr code retrievd by dt12345
 - Improved code, UI by Echocolat
-- Additional research by dt12345, Doge229 and Echocolat
+- Additional testing by Doge229
+- Web part handled by Glitchtest
