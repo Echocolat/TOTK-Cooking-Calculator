@@ -643,7 +643,7 @@ class TotKCookSim():
 
         # dubious food restores 1 heart, rock hard food restores 1/4 heart, both have no effect
         recipe = self._tmp['Recipe']
-        if recipe['ResultActorName'] in ['Item_Cook_O_02', self.system_data['SubtleLifeRecover']]:
+        if recipe['ResultActorName'] in ['Item_Cook_O_02', self.system_data['FailActorName']]:
             if recipe['ResultActorName'] == "Item_Cook_O_02":
                 self._tmp['HitPointRecover'] = self.system_data['FailLifeRecover']
             else:
@@ -738,7 +738,7 @@ class TotKCookSim():
             else:
                 self._tmp['RNG'] += f"If there's a critical hit, adds {int(self.effect['LifeRecover'].get('SuperSuccessAddVolume') / 4)} Hearts"
 
-        # calculate heart amount        
+        # calculate heart amount
         heart_amount = round(self._tmp['HitPointRecover'] / 4, 2)
         # remove unnecessary digits
         if heart_amount.is_integer():
@@ -892,5 +892,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Apple"])
+    output = meal.cook(["Hot-Footed Frog"])
     print(output)
