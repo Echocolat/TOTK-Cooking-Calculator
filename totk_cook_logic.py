@@ -295,7 +295,7 @@ class TotKCookSim():
             hitpoint_recover += material.get('HitPointRecover', 0)
         
         # if failed meal, rate is 1.0 (in vanilla game), else 2.0 (basically, when cooked (correctly) materials grant twice more HP than not cooked)
-        if recipe['ResultActorName'] == self.system_data['FailActorName']:
+        if recipe['ResultActorName'] in [self.system_data['FailActorName'], "Item_Cook_O_02"]:
             life_recover_rate = self.system_data['SubtleLifeRecoverRate']
         else:
             life_recover_rate = self.system_data['LifeRecoverRate']
@@ -608,8 +608,8 @@ class TotKCookSim():
         for item in self.system_data['PriceRateList']:
             if item['MaterialNum'] == len(materials_list):
                 self._tmp['SellingPrice'] = math.floor(selling_price * item['Rate'])
-            # can't be lower than 2, unless fairy tonic, rock hard meal or dubious food
-
+        
+        # can't be lower than 2, unless fairy tonic, rock hard meal or dubious food
         self._tmp['SellingPrice'] = max(self._tmp['SellingPrice'], 3)
         if self._tmp['Recipe']['ResultActorName'] in ['Item_Cook_O_02', self.system_data['SubtleLifeRecover'], self.system_data['FairyActorName']]:
             self._tmp['SellingPrice'] = 2
@@ -892,5 +892,5 @@ class TotKCookSim():
         
 if __name__ == "__main__":
     meal = TotKCookSim()
-    output = meal.cook(["Hot-Footed Frog"])
+    output = meal.cook(["Fairy", "Bokoblin Horn"])
     print(output)
