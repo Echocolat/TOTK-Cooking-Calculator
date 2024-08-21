@@ -2,11 +2,7 @@
 
 #### What is this?
 
-This is a Cooking simulator for _The Legend of Zelda: Tears of the Kingdom_. The user can input between one and five materials, and the app will calculate the meal and all its properties on the fly. This includes eventual changes made by Critical dishes and Monster Extract.
-
-#### How do I use it pleeeeease
-
-Select up to 5 materials and press the Cook button.
+This is a Cooking simulator for _The Legend of Zelda: Tears of the Kingdom_. The user can input between one and five materials, and the app will calculate the meal and all its properties on the fly. This includes eventual changes made by Critical dishes and Monster Extract. You can see an in-depth and complete explanation of the Cooking System in [this document](https://docs.google.com/document/d/1IxQGHxr0G2-grcSfDgM5jkLkhjYPjsYJEhgp30WOItc/edit?usp=sharing).
 
 #### "this is wrong, I don't get the same thing in game!!!!"
 
