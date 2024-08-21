@@ -32,7 +32,7 @@ function createDropdown(options, id) {
 async function makeMatDropdown(id) {
     const MaterialData = await fetchJson('./Data/MaterialData.json');
     const LanguageData = await fetchJson('./Data/LanguageData.json');
-    const lang = "EUen";
+    const lang = "USen";
 
     let options = [''];
 

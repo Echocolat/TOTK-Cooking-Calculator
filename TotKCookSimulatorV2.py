@@ -2,10 +2,9 @@ import traceback
 import customtkinter as ctk
 import tkinter as tk
 from totk_cook_logic import TotKCookSim, InvalidMaterialException, EmptyMaterialListException
-from PIL import Image
 
 # credits
-INFO = "TotK Cooking Simulator v2 | Cooking code retrived by dt12345, Base code made by KingFoo, Improved code and UI by Echocolat, additional research by Doge229, dt12345 and Echocolat"
+INFO = "TotK Cooking Simulator v2 | Cooking code retrived by dt12345, Base code made by KingFoo, Improved code by Echocolat, web part by Glitchtest, additional testing by Doge229"
 
 # initialize the sim
 sim = TotKCookSim()
