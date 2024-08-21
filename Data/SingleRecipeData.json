@@ -14,7 +14,8 @@
         "Icon": "assets/icon/Item_Cook_O_02.png",
         "PictureBookNum": 146,
         "SingleRecipeMaterialNum": 1,
-        "IsSingleRecipe": true
+        "IsSingleRecipe": true,
+        "CookFailure": true
     },
     {
         "ResultActorName": "Item_Cook_B_21",
@@ -129,7 +130,8 @@
         "Icon": "assets/icon/Item_Cook_O_01.png",
         "PictureBookNum": 145,
         "SingleRecipeMaterialNum": 1,
-        "IsSingleRecipe": true
+        "IsSingleRecipe": true,
+        "CookFailure": true
     },
     {
         "ResultActorName": "Item_Cook_O_01",
@@ -137,6 +139,7 @@
         "Icon": "assets/icon/Item_Cook_O_01.png",
         "PictureBookNum": 145,
         "SingleRecipeMaterialNum": 1,
-        "IsSingleRecipe": true
+        "IsSingleRecipe": true,
+        "CookFailure": true
     }
 ]

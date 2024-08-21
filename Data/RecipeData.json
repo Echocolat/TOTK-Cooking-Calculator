@@ -36,21 +36,24 @@
         "Recipe": "CookForeign",
         "Icon": "assets/icon/Item_Cook_O_01.png",
         "PictureBookNum": 145,
-        "SingleRecipeMaterialNum": 1
+        "SingleRecipeMaterialNum": 1,
+        "CookFailure": true
     },
     {
         "ResultActorName": "Item_Cook_O_01",
         "Recipe": "CookGolem",
         "Icon": "assets/icon/Item_Cook_O_01.png",
         "PictureBookNum": 145,
-        "SingleRecipeMaterialNum": 1
+        "SingleRecipeMaterialNum": 1,
+        "CookFailure": true
     },
     {
         "ResultActorName": "Item_Cook_O_02",
         "Recipe": "CookOre",
         "Icon": "assets/icon/Item_Cook_O_02.png",
         "PictureBookNum": 146,
-        "SingleRecipeMaterialNum": 1
+        "SingleRecipeMaterialNum": 1,
+        "CookFailure": true
     },
     {
         "ResultActorName": "Item_Cook_C_17",
@@ -64,7 +67,8 @@
         "Recipe": "CookEnemy or CookInsect",
         "Icon": "assets/icon/Item_Cook_O_01.png",
         "PictureBookNum": 145,
-        "SingleRecipeMaterialNum": 1
+        "SingleRecipeMaterialNum": 1,
+        "CookFailure": true
     },
     {
         "ResultActorName": "Item_Cook_N_02",
