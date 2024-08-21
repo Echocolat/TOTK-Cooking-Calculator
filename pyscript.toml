@@ -1,0 +1,14 @@
+packages = []
+
+[files]
+"{PATH}" = "Data/"
+"{FROM}" = "{PATH}"
+"{TO}" = "./{PATH}"
+"{FROM}/EffectData.json" = "{TO}"
+"{FROM}/LanguageData.json" = "{TO}"
+"{FROM}/MaterialData.json" = "{TO}"
+"{FROM}/RecipeCardData.json" = "{TO}"
+"{FROM}/RecipeData.json" = "{TO}"
+"{FROM}/SingleRecipeData.json" = "{TO}"
+"{FROM}/SystemData.json" = "{TO}"
+"totk_cook_logic.py" = "./totk_cook_logic.py"
