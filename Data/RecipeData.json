@@ -60,7 +60,8 @@
         "Recipe": "CookEnemy + CookInsect",
         "Icon": "assets/icon/Item_Cook_C_17_EffectType.png",
         "PictureBookNum": 229,
-        "SingleRecipeMaterialNum": 1
+        "SingleRecipeMaterialNum": 1,
+        "CookEMedicine": true
     },
     {
         "ResultActorName": "Item_Cook_O_01",

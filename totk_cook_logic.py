@@ -289,9 +289,6 @@ class TotKCookSim():
                     effect_level = 0
                     effect_type = None
                     effect_time = 0
-                    if recipe['ResultActorName'] == 'Item_Cook_C_17':
-                        recipe = FAILURE_RECIPE
-                        self._tmp['Recipe'] = FAILURE_RECIPE
                 else:
                     effect_type = effect
                 # initialize potency sum
@@ -317,6 +314,12 @@ class TotKCookSim():
                 effect_level = min(effect_level, self.effect[effect].get('MaxLv'))
                 set_effect_flag = True
         
+        # effect-less elixir is invalid, although impossible to reach in vanilla totk
+        # multi-effect elixirs are also invalid and generate a failed result
+        if recipe['ResultActorName'].get('CookEMedicine', False) and effect_type == None:
+            recipe = FAILURE_RECIPE
+            self._tmp['Recipe'] = FAILURE_RECIPE
+
         # fairy tonic hardcoded values
         if recipe['ResultActorName'] in [self.system_data['FairyActorName'], self.system_data['FailActorName'], "Item_Cook_O_02"]:
             effect_type = None
