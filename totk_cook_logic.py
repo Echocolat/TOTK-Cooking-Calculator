@@ -316,7 +316,7 @@ class TotKCookSim():
         
         # effect-less elixir is invalid, although impossible to reach in vanilla totk
         # multi-effect elixirs are also invalid and generate a failed result
-        if recipe['ResultActorName'].get('CookEMedicine', False) and effect_type == None:
+        if recipe.get('CookEMedicine', False) and effect_type == None:
             recipe = FAILURE_RECIPE
             self._tmp['Recipe'] = FAILURE_RECIPE
 
